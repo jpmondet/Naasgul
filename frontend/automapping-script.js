@@ -40,7 +40,7 @@ function OnClickLinkDetails(source_name, target_name, source_interfaces, target_
 
     targetdiv = document.getElementById("infobox")
 
-    fetch(apiUrl + "/stats/?q=" + source_name.id + "&q=" + target_name.id)
+    fetch(apiUrl + "/stats/?devices=" + source_name.id + "&devices=" + target_name.id)
     .then(function(response) {
         if (response.status !== 200) {
           throw new Error('Looks like there was a problem. Status Code: ' + response.status);
@@ -841,7 +841,7 @@ function OnViewChange(deviceid, view = "neighbors"){
     // # CREATING GRAPHS      #
     // #############################
     if (view == "traffic"){
-        fetch(apiUrl + "/stats/?q=" + deviceid)
+        fetch(apiUrl + "/stats/?devices=" + deviceid)
         .then(
           function(response) {
             if (response.status !== 200) {
@@ -870,7 +870,7 @@ function OnViewChange(deviceid, view = "neighbors"){
     // # READING NEIGHBORS VIEW    #
     // #############################
     else if (view == "neighbors"){
-        fetch(apiUrl + "/neighborships/?q=" + deviceid)
+        fetch(apiUrl + "/neighborships/?device=" + deviceid)
         .then(
           function(response) {
             if (response.status !== 200) {
