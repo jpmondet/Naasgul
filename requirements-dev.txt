@@ -7,4 +7,5 @@ black
 mypy
 bandit
 scalene
+nodeenv
 -r backend/requirements.txt
