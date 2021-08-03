@@ -104,7 +104,7 @@ def get_table(
         hlapi.UdpTransportTarget((target, port)),
         context,
         *construct_object_types(oids),
-        lexicographicMode=False
+        lexicographicMode=False,
     )
     return fetch(handler, len(oids))
 
@@ -112,15 +112,15 @@ def get_table(
 def get(
     target, oids, credentials, port=161, engine=hlapi.SnmpEngine(), context=hlapi.ContextData()
 ):
-    #print(get)
+    # print(get)
     handler = hlapi.getCmd(
         engine,
         credentials,
         hlapi.UdpTransportTarget((target, port)),
         context,
-        *construct_object_types(oids)
+        *construct_object_types(oids),
     )
-    #print(handler)
+    # print(handler)
     return fetch(handler, 1)[0]
 
 
@@ -141,7 +141,7 @@ def get_bulk(
         context,
         start_from,
         count,
-        *construct_object_types(oids)
+        *construct_object_types(oids),
     )
     return fetch(handler, count)
 
@@ -158,7 +158,7 @@ def get_bulk_auto(
 ):
 
     count = get(target, [count_oid], credentials, port, engine, context)[count_oid]
-    #print(count)
+    # print(count)
     res = get_bulk(target, oids, credentials, count, start_from, port, engine, context)
 
     return res

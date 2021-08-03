@@ -60,7 +60,11 @@ def add_iface_stats(device_name: str, iface_name: str) -> None:
 
 
 def add_static_node(
-    node_name: str, node_ip: str, node_group: int, node_ifaces: List[str] = None, neigh_infos: List[Tuple[str, str, str]] = None
+    node_name: str,
+    node_ip: str,
+    node_group: int,
+    node_ifaces: List[str] = None,
+    neigh_infos: List[Tuple[str, str, str]] = None,
 ) -> None:
     node_name = node_name if node_name else node_ip
     try:

@@ -121,13 +121,13 @@ def main():
         for device in scrapped:
             if "fake" in device["device_name"]:
                 continue
-            devices.append((device["device_name"], None, 161)) 
+            devices.append((device["device_name"], None, 161))
 
         if not devices:
             if INIT_NODE_FQDN:
-                    device = (INIT_NODE_FQDN, INIT_NODE_IP, int(INIT_NODE_PORT))
+                device = (INIT_NODE_FQDN, INIT_NODE_IP, int(INIT_NODE_PORT))
             elif INIT_NODE_IP:
-                    device = (INIT_NODE_IP, INIT_NODE_IP, int(INIT_NODE_PORT))
+                device = (INIT_NODE_IP, INIT_NODE_IP, int(INIT_NODE_PORT))
             else:
                 # This is a test case
                 device = ("fake_local_device", "127.0.0.1", 1161)

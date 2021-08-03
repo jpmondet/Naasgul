@@ -7,8 +7,17 @@ import json
 import pytest
 from fastapi.exceptions import HTTPException
 from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
-sys.path.append(os.path.realpath(os.path.dirname(__file__)+"/../backend/"))
-from db_layer import prep_db_if_not_exist, get_latest_utilization, add_iface_stats, bulk_update_collection, get_stats_devices, UTILIZATION_COLLECTION, get_latest_utilization
+
+sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
+from db_layer import (
+    prep_db_if_not_exist,
+    get_latest_utilization,
+    add_iface_stats,
+    bulk_update_collection,
+    get_stats_devices,
+    UTILIZATION_COLLECTION,
+    get_latest_utilization,
+)
 
 
 delete_all_collections_datas()
@@ -29,17 +38,19 @@ with open("tests/neighs_datas.json") as neighs_datas:
 
 
 def test_get_latest_utilization():
-    latest = get_latest_utilization('fake_device_stage1_1', '1/1')
+    latest = get_latest_utilization("fake_device_stage1_1", "1/1")
     print(latest)
     assert latest == 1250000
 
+
 def test_get_latest_utilization_not_existing():
-    latest = get_latest_utilization('Device_that_not_exist', '1/1')
+    latest = get_latest_utilization("Device_that_not_exist", "1/1")
     assert latest == 0
 
+
 def test_add_iface_stats():
-    device = 'fake_device_stage1_1'
-    iface = '1/1'
+    device = "fake_device_stage1_1"
+    iface = "1/1"
     timestamp = "now"
     speed = 1337
 
@@ -54,14 +65,19 @@ def test_add_iface_stats():
     add_iface_stats(stats_list)
 
     for device_stats in get_stats_devices([device]):
-        if device_stats["iface_name"] == iface and device_stats["timestamp"] == timestamp and device_stats["speed"] == speed:
+        if (
+            device_stats["iface_name"] == iface
+            and device_stats["timestamp"] == timestamp
+            and device_stats["speed"] == speed
+        ):
             return
 
-    raise(ValueError)
-    
+    raise (ValueError)
+
+
 def test_bulk_update_collection():
-    device_name = 'fake_device_stage1_1'
-    iface_name = '6/6'
+    device_name = "fake_device_stage1_1"
+    iface_name = "6/6"
     prev_utilization = 1337
     last_utilization = 1337
 
@@ -70,7 +86,7 @@ def test_bulk_update_collection():
         "device_name": device_name,
         "iface_name": iface_name,
         "prev_utilization": prev_utilization,
-        "last_utilization": last_utilization
+        "last_utilization": last_utilization,
     }
     utilization_list = [(query, utilization)]
 

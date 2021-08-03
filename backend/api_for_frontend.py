@@ -132,11 +132,11 @@ def background_time_update():
 
 def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> None:
 
-    add_node(node.name, node.group) # type: ignore
+    add_node(node.name, node.group)  # type: ignore
 
     if neigh_infos:
         for neigh in neigh_infos:
-            neigh.name = neigh.name if neigh.name else neigh.addr # type: ignore
+            neigh.name = neigh.name if neigh.name else neigh.addr  # type: ignore
             if get_node(neigh.name):
                 add_link(node.name, neigh.name, neigh.node_iface, neigh.iface)
                 add_link(neigh.name, node.name, neigh.iface, neigh.node_iface)
@@ -239,14 +239,14 @@ def get_graph():
                 speed = speeds[device + iface]
                 speed = speed * 1000000  # Convert speed to bits
             except KeyError:
-                speed = 1 # Can't determine speed
+                speed = 1  # Can't determine speed
                 logger.error(f"Cant find speed for {device+iface} in {speeds}")
 
             try:
                 highest_utilization = utilizations[device + iface]
                 highest_utilization = highest_utilization * 8  # convert to bits
             except KeyError:
-                highest_utilization = 0 # Can't determine speed
+                highest_utilization = 0  # Can't determine speed
                 logger.error(f"Cant find utilization for {device+iface} in {utilizations}")
 
             percent_highest = highest_utilization / speed * 100
