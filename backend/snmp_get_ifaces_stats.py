@@ -29,7 +29,7 @@ SNMP_USR = getenv("SNMP_USR")
 SNMP_AUTH_PWD = getenv("SNMP_AUTH_PWD")
 SNMP_PRIV_PWD = getenv("SNMP_PRIV_PWD")
 TEST_CASE = getenv("AUTOMAP_TEST_CASE")
-THREADS_NB = getenv("AUTOMAP_NB_THREADS", "10")
+NB_THREADS = getenv("AUTOMAP_NB_THREADS", "10")
 
 
 def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=too-many-locals
@@ -145,7 +145,7 @@ def main():
             devices.append(("fake_local_device", "127.0.0.1", 1161))
 
         if devices:
-            for devices_to_scrap in split_list(devices, int(THREADS_NB)):
+            for devices_to_scrap in split_list(devices, int(NB_THREADS)):
                 loop = asyncio.get_event_loop()
                 loop.run_until_complete(
                     asyncio.wait(
@@ -165,7 +165,7 @@ def main():
         else:
             print("No devices retrieved from db... Waiting till there are any.")
 
-        sleep(300)
+        sleep(int(60 * (len(devices) / int(NB_THREADS))))
 
 
 if __name__ == "__main__":
