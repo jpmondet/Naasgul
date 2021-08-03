@@ -3,3 +3,5 @@ storage/db
 storage/db_back
 .snmp
 .env
+venv
+frontend/nodeenv/
