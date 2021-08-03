@@ -4,6 +4,7 @@ variables:
   #SNMP_AUTH_PWD: 
   #SNMP_PRIV_PWD: 
   #MONGODB_PWD:
+  PROJ_NAME: naasgul
   CI_COMMIT_BRANCH: master
   DB_STRING: "mongodb://mongodb:27017/"
 
@@ -42,7 +43,7 @@ build_api:
     service_to_build: api
   script:
     - ls -alh
-    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t ${PROJ_NAME}_${service_to_build}:${CI_COMMIT_BRANCH}
 
 build_toposcrapper:
   stage: build
@@ -50,7 +51,7 @@ build_toposcrapper:
   variables:
     service_to_build: toposcrapper
   script:
-    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t ${PROJ_NAME}_${service_to_build}:${CI_COMMIT_BRANCH}
 
 build_statscrapper:
   stage: build
@@ -58,7 +59,7 @@ build_statscrapper:
   variables:
     service_to_build: statscrapper
   script:
-    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t ${PROJ_NAME}_${service_to_build}:${CI_COMMIT_BRANCH}
 
 build_frontend:
   stage: build
@@ -66,7 +67,7 @@ build_frontend:
   variables:
     service_to_build: frontend
   script:
-    - docker build -f ${service_to_build}/Dockerfile ${service_to_build}/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+    - docker build -f ${service_to_build}/Dockerfile ${service_to_build}/ -t ${PROJ_NAME}_${service_to_build}:${CI_COMMIT_BRANCH}
 
 production:
   stage: production
