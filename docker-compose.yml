@@ -25,6 +25,7 @@ services:
       dockerfile: Dockerfile.toposcrapper
     env_file:
     - ${REPO_PATH}/.snmp
+    - ${REPO_PATH}/.env
     environment:
     - DB_STRING=mongodb://mongodb:27017/
   stats_crawler_snmp:
