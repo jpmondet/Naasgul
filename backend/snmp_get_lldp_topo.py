@@ -160,7 +160,7 @@ def main():
                 )
             )
 
-        sleep(60)
+        sleep(300)
 
 
 if __name__ == "__main__":

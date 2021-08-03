@@ -165,7 +165,7 @@ def main():
         else:
             print("No devices retrieved from db... Waiting till there are any.")
 
-        sleep(60)
+        sleep(300)
 
 
 if __name__ == "__main__":
