@@ -9,21 +9,21 @@ variables:
 
 black:
   stage: tests
-  image: python:3.8.10-slim-buster
+  image: python:3.9.6-slim-buster
   script:
     - pip install -r requirements-dev.txt
     - black -l 100 -t py38 --check backend/ tests/
 
 pylint:
   stage: tests
-  image: python:3.8.10-slim-buster
+  image: python:3.9.6-slim-buster
   script:
     - pip install -r requirements-dev.txt
     - pylint backend/ tests/
 
 pytest:
   stage: tests
-  image: python:3.8.10-slim-buster
+  image: python:3.9.6-slim-buster
   services:
     - name: mongo:4.4.3-bionic
       alias: mongodb

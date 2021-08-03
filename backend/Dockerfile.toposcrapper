@@ -1,12 +1,8 @@
-FROM python:3.8.10-slim-buster
+FROM python:3.9.6-slim-buster
 
 COPY snmp_get_lldp_topo.py snmp_functions.py db_layer.py requirements.txt /app/
 
 WORKDIR /app
-
-#RUN pip uninstall -y bson \
-#    && pip uninstall -y pymongo \
-#    && pip install -r requirements.txt
 
 RUN pip install -r requirements.txt
 
