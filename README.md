@@ -14,3 +14,9 @@ That means that this project aims to output a map of the network topology and re
   - export STOP_NODES_FQDN=fqdn1,fqdn2
 - cd frontend/ ; terser automapping-script.js -o public-html/automapping-script.min.js ; cd .. ; docker-compose up -V --force-recreate --always-recreate-deps --build --remove-orphans
 - Browser to http://127.0.0.1:8080
+
+## Play gitlab-ci locally
+
+`ci_tests.sh` allows to play Gitlab-ci jobs locally for development purposes.
+
+Simply run `./scripts/ci_tests.sh` and it should run.
