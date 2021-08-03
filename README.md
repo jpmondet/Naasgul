@@ -5,14 +5,18 @@ That means that this project aims to output a map of the network topology and re
 
 (Was greatly inspired by a similar PoC project from `zerxen` at first)
 
-## Quick Usage
+## Quick Non-prod Usage
 
-- Virtual env with requirements
-- export REPO_PATH=$(pwd)
+- `python3 -m venv venv`
+- `. venv/bin/activate`
+- `python3 -m pip install -r requirements-dev.txt`
+- `cd frontend ; nodeenv --without-ssl --node=0.4.3 --npm=0.3.17 --jobs=4 env-4.3 ; cd ..`
+- `export REPO_PATH=$(pwd)`
 - export LLDP_INIT_NODE_FQDN="node_name" (or LLDP_INIT_NODE_IP if there is no fqdn. LLDP_INIT_NODE_PORT if different snmp port)
-- If scrapping must stop at a particular device : STOP_NODES_FQDN or STOP_NODES_IP
-  - export STOP_NODES_FQDN=fqdn1,fqdn2
-- cd frontend/ ; terser automapping-script.js -o public-html/automapping-script.min.js ; cd .. ; docker-compose up -V --force-recreate --always-recreate-deps --build --remove-orphans
+- If scrapping must stop at a particular device : LLDP_STOP_NODES_FQDN or LLDP_STOP_NODES_IP
+  - export LLDP_STOP_NODES_FQDN=fqdn1,fqdn2
+- Those LLDP variables can be specified in a `.env` file if using `docker-compose`
+- `cd frontend/ ; . env/bin/activate ; terser automapping-script.js -o public-html/automapping-script.min.js ; cd .. ; docker-compose up -V --force-recreate --always-recreate-deps --build --remove-orphans`
 - Browser to http://127.0.0.1:8080
 
 ## Play gitlab-ci locally
