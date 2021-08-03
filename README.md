@@ -1,4 +1,7 @@
-# Naasgul: Network as a Graph using lldp (and snmp for now ;-) ) [Work in Progress]
+# Naasgul: Network as a Graph using lldp
+(and snmp for now ;-) )
+
+# /!\ [Work in Progress] /!\
 
 The goal here is to have an automated replacement to weathermap.  
 That means that this project aims to output a map of the network topology and regularly poll the devices to show the links utilization.
