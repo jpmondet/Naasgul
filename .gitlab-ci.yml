@@ -20,7 +20,7 @@ pylint:
   image: python:3.9.6-slim-buster
   script:
     - pip install -r requirements-dev.txt
-    - pylint backend/ tests/
+    - pylint backend/ tests/ scripts/
 
 pytest:
   stage: tests
