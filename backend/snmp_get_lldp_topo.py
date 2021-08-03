@@ -26,12 +26,12 @@ from snmp_functions import (
 SNMP_USR = getenv("SNMP_USR")
 SNMP_AUTH_PWD = getenv("SNMP_AUTH_PWD")
 SNMP_PRIV_PWD = getenv("SNMP_PRIV_PWD")
-INIT_NODE_FQDN = getenv("LLDP_INIT_NODE_FQDN")
-INIT_NODE_IP = getenv("LLDP_INIT_NODE_IP")
-INIT_NODE_PORT = getenv("LLDP_INIT_NODE_PORT")
-STOP_NODES_FQDN = getenv("LLDP_STOP_NODES_FQDN")
-STOP_NODES_IP = getenv("LLDP_STOP_NODES_IP")
-NB_THREADS = getenv("AUTOMAP_NB_THREADS", 10)
+INIT_NODE_FQDN = getenv("LLDP_INIT_NODE_FQDN", "")
+INIT_NODE_IP = getenv("LLDP_INIT_NODE_IP", "")
+INIT_NODE_PORT = getenv("LLDP_INIT_NODE_PORT", "161")
+STOP_NODES_FQDN = getenv("STOP_NODES_FQDN")
+STOP_NODES_IP = getenv("STOP_NODES_IP")
+NB_THREADS = getenv("AUTOMAP_NB_THREADS", "10")
 
 
 def dump_results_to_db(device_name, lldp_infos) -> None:
@@ -100,6 +100,7 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
 async def get_device_lldp_infos(target_name, oids, credentials, target_ip=None, port=161):
 
     target = target_ip if target_ip else target_name
+    target_name = target if not target_name else target_name
 
     try:
         res = get_table(target, oids, credentials, port=port)
@@ -120,14 +121,13 @@ def main():
         for device in scrapped:
             if "fake" in device["device_name"]:
                 continue
-            devices.append((device["device_name"], None, 161))
+            devices.append((device["device_name"], None, 161)) 
 
         if not devices:
-            if INIT_NODE_FQDN or INIT_NODE_IP:
-                global INIT_NODE_PORT
-                if not INIT_NODE_PORT:
-                    INIT_NODE_PORT = 161
-                device = (INIT_NODE_FQDN, INIT_NODE_IP, INIT_NODE_PORT)
+            if INIT_NODE_FQDN:
+                    device = (INIT_NODE_FQDN, INIT_NODE_IP, int(INIT_NODE_PORT))
+            elif INIT_NODE_IP:
+                    device = (INIT_NODE_IP, INIT_NODE_IP, int(INIT_NODE_PORT))
             else:
                 # This is a test case
                 device = ("fake_local_device", "127.0.0.1", 1161)
@@ -146,7 +146,7 @@ def main():
 
         print(devices)
 
-        for devices_to_scrap in split_list(devices, NB_THREADS):
+        for devices_to_scrap in split_list(devices, int(NB_THREADS)):
 
             loop = asyncio.get_event_loop()
             loop.run_until_complete(
