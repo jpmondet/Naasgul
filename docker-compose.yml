@@ -1,0 +1,43 @@
+version: "3.8"
+services:
+  mongodb:
+    image: "mongo:4.4.3-bionic"
+    container_name: mongodb
+    environment:
+    - PUID=1000
+    - PGID=1000
+    volumes:
+    - ${REPO_PATH}/storage/db:/data/db
+    ports:
+    - 27017:27017
+    restart: unless-stopped
+  api:
+    build:
+      context: ${REPO_PATH}/backend/
+      dockerfile: Dockerfile.api
+    environment:
+    - DB_STRING=mongodb://mongodb:27017/
+    ports: 
+    - 8000:80
+  topo_scrapper_snmp:
+    build:
+      context: ${REPO_PATH}/backend/
+      dockerfile: Dockerfile.toposcrapper
+    env_file:
+    - ${REPO_PATH}/.snmp
+    environment:
+    - DB_STRING=mongodb://mongodb:27017/
+  stats_crawler_snmp:
+    build:
+      context: ${REPO_PATH}/backend/
+      dockerfile: Dockerfile.statscrapper
+    env_file:
+    - ${REPO_PATH}/.snmp
+    environment:
+    - DB_STRING=mongodb://mongodb:27017/
+  apache:  
+    image: "httpd:2.4"
+    volumes:
+    - ${REPO_PATH}/frontend/public-html/:/usr/local/apache2/htdocs/
+    ports: 
+    - 8080:80

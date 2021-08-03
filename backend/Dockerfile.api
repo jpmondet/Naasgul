@@ -1,0 +1,12 @@
+FROM python:3.8.10-slim-buster
+
+COPY api_for_frontend.py db_layer.py requirements.txt /app/
+
+WORKDIR /app
+
+#RUN pip uninstall -y bson \
+#    && pip uninstall -y pymongo \
+#    && pip install -r requirements.txt
+RUN pip install -r requirements.txt
+
+CMD ["uvicorn", "api_for_frontend:app", "--host", "0.0.0.0", "--port", "80"]

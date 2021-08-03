@@ -1,0 +1,79 @@
+variables:
+  #TODO: leverage gitlab variables?
+  #SNMP_USR: 
+  #SNMP_AUTH_PWD: 
+  #SNMP_PRIV_PWD: 
+  #MONGODB_PWD:
+  CI_COMMIT_BRANCH: master
+  DB_STRING: "mongodb://mongodb:27017/"
+
+black:
+  stage: tests
+  image: python:3.8.10-slim-buster
+  script:
+    - pip install -r requirements-dev.txt
+    - black -l 100 -t py38 --check backend/ tests/
+
+pylint:
+  stage: tests
+  image: python:3.8.10-slim-buster
+  script:
+    - pip install -r requirements-dev.txt
+    - pylint backend/ tests/
+
+pytest:
+  stage: tests
+  image: python:3.8.10-slim-buster
+  services:
+    - name: mongo:4.4.3-bionic
+      alias: mongodb
+  script:
+    - pip install -r requirements-dev.txt
+    - pytest --cov=backend -s tests/ --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+
+build_api:
+  stage: build
+  image: docker:19.03.13-dind
+  variables:
+    service_to_build: api
+  script:
+    - ls -alh
+    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+
+build_toposcrapper:
+  stage: build
+  image: docker:19.03.13-dind
+  variables:
+    service_to_build: toposcrapper
+  script:
+    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+
+build_statscrapper:
+  stage: build
+  image: docker:19.03.13-dind
+  variables:
+    service_to_build: statscrapper
+  script:
+    - docker build -f backend/Dockerfile.${service_to_build} backend/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+
+build_frontend:
+  stage: build
+  image: docker:19.03.13-dind
+  variables:
+    service_to_build: frontend
+  script:
+    - docker build -f ${service_to_build}/Dockerfile ${service_to_build}/ -t automapping_${service_to_build}:${CI_COMMIT_BRANCH}
+
+production:
+  stage: production
+  script:
+    - #TODO : k8s
+  environment:
+    name: production
+    url: https://$CI_PROJECT_PATH_SLUG.$KUBE_INGRESS_BASE_DOMAIN
+  only:
+    - master
