@@ -13,7 +13,7 @@ black:
   image: python:3.9.6-slim-buster
   script:
     - pip install -r requirements-dev.txt
-    - black -l 100 -t py38 --check backend/ tests/
+    - black -l 100 -t py38 --check backend/ tests/ scripts/
 
 pylint:
   stage: tests
