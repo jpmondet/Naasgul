@@ -35,8 +35,10 @@ def test_graph_nodes():
 
 def test_graph_links():
     graph = get_graph()
-    print(json.dumps(graph))
-    assert graph["links"] == TEST_GRAPH_DATA["links"]
+    sorted_links = sorted(graph["links"],key=lambda d: (d["source"], d["target"]))
+    sorted_test_links = sorted(TEST_GRAPH_DATA["links"], key=lambda d: (d["source"], d["target"]))
+    # assert graph["links"] == TEST_GRAPH_DATA["links"]
+    assert sorted_links == sorted_test_links
 
 
 def test_stats_of_link_between_2_devices():
