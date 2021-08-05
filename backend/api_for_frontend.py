@@ -193,13 +193,19 @@ def get_graph():
     nodes: List[Dict[str, Any]] = get_from_db_or_cache("nodes", get_all_nodes)
 
     for node in nodes:
-        if not node.get("group") or not node.get("image"):
+        if not node.get("groupx"): # or not node.get("image"):
             # Test nodes
             if "sw" in node["device_name"]:
-                node["group"] = 1
+                node["groupx"] = 1
+                node["groupy"] = 1
                 node["image"] = "switch.png"
+            elif "rtr" in node["device_name"]:
+                node["groupx"] = 3
+                node["groupy"] = 3
+                node["image"] = "router.png"
             else:
-                node["group"] = 2
+                node["groupx"] = 4
+                node["groupy"] = 10
                 node["image"] = "router.png"
 
         node["id"] = node["device_name"]
@@ -246,9 +252,9 @@ def get_graph():
                     percent_highest = 0
             except KeyError:
                 speed = 1000000  # Can't determine speed
-                highest_utilization = 0  # Can't determine speed
+                highest_utilization = 0  # Can't determine utilization since it's based on max link speed
                 percent_highest = 0
-                #logger.error(f"Cant find speed for {device+iface} in {speeds}")
+                logger.error(f"Cant find speed for {device+iface} in {speeds}")
 
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):
