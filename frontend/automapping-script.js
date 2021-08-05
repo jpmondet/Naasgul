@@ -1075,7 +1075,7 @@ function resize_svg_on_window_resize(){
     // Trying to set height of main SVG
     document.getElementById('container').style.height = newClientHeight + "px";
 
-    slider_input()
+    //slider_input()
 }
 
 
@@ -1088,7 +1088,7 @@ var svg = d3.select("div#container")
     .append("svg")
     .attr("id", "primary-svg")
     .attr("preserveAspectRatio", "xMinYMin")
-    .attr("viewBox", "0 0 6000 6000")
+    .attr("viewBox", "0 0 800 600")
     //.attr("viewBox", [0, 0, width, height])
     .classed("svg-content", true);
 
@@ -1097,7 +1097,10 @@ var svg = d3.select("div#container")
 var svg_element = document.getElementById('primary-svg');
 var positionInfo = svg_element.getBoundingClientRect();
     height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    //console.log(window.innerHeight, document.documentElement.clientHeight, document.body.clientHeight);
+    //height =  2160;
     width = positionInfo.width ;
+    //width = 3840;
     svg_element.setAttribute("preserveAspectRatio", "xMinYMin")
     svg_element.setAttribute("viewBox", "0 0 " + width + " " + height)
     //console.log("Initial width:" + width)
@@ -1107,30 +1110,30 @@ var positionInfo = svg_element.getBoundingClientRect();
 document.getElementById('container').style.height = height + "px";
 
 // ###########  Scale Slider controls ##########
-var slider = document.getElementById("scale_slider");
-var output = document.getElementById("scale_indicator");
-output.value = width
-output.innerHTML = width;
-initial_scale = width
-
-slider.addEventListener("input", slider_input);
-
-function slider_input() {
-  var slider = document.getElementById("scale_slider");
-
-  output.innerHTML = slider.value;
-  //console.log("Scale_input: " + slider.value)
-
-  // Change element attribute
-  var svg_element = document.getElementById('primary-svg');
-  var original_viewBox = svg_element.getAttribute("viewBox")
-  var res = original_viewBox.split(" ");
-  res[0] = (initial_scale - slider.value) / 2
-  wh_ratio = ( (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) / initial_scale )
-  res[1] = wh_ratio + res[0] * wh_ratio
-  //console.log("view X: " + res[0] + " view Y: " + res[1])
-  svg_element.setAttribute("viewBox", res[0] + " " + res[1] + " " + slider.value + " " + slider.value)
-}
+//var slider = document.getElementById("scale_slider");
+//var output = document.getElementById("scale_indicator");
+//output.value = width
+//output.innerHTML = width;
+//initial_scale = width
+//
+//slider.addEventListener("input", slider_input);
+//
+//function slider_input() {
+//  var slider = document.getElementById("scale_slider");
+//
+//  output.innerHTML = slider.value;
+//  //console.log("Scale_input: " + slider.value)
+//
+//  // Change element attribute
+//  var svg_element = document.getElementById('primary-svg');
+//  var original_viewBox = svg_element.getAttribute("viewBox")
+//  var res = original_viewBox.split(" ");
+//  res[0] = (initial_scale - slider.value) / 2
+//  wh_ratio = ( (window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight) / initial_scale )
+//  res[1] = wh_ratio + res[0] * wh_ratio
+//  //console.log("view X: " + res[0] + " view Y: " + res[1])
+//  svg_element.setAttribute("viewBox", res[0] + " " + res[1] + " " + slider.value + " " + slider.value)
+//}
 
 // ###########  FORCE Slider controls ##########
 var force_slider = document.getElementById("force_slider");
@@ -1143,7 +1146,8 @@ force_slider.oninput = function() {
   force_output.innerHTML = this.value;
   //console.log("force_output: " + this.value)
 
-  simulation.force("y", d3.forceY(height/2).strength(this.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
+  //simulation.force("y", d3.forceY(height/2).strength(this.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
+  simulation.force("y", d3.forceY(function(d){ console.log(d.groupy * height * 0.2 / 6) ; return (d.groupy * height * 0.2 / 6)}).strength(this.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
   //console.log("starting simulation");
   simulation.alphaTarget(0.03).restart()
   simulation.alpha(1).restart()
@@ -1157,10 +1161,11 @@ var color = d3.scaleOrdinal(d3.schemeCategory10);
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id }).distance(100).strength(0.001))
     .force("charge", d3.forceManyBody().strength(-200).distanceMax(500).distanceMin(150))
-    .force("x", d3.forceX(function(d){ return (d.group * width * 0.7 / 6)}).strength(1))
-    .force("y", d3.forceY(height/2).strength(force_output.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
+    .force("x", d3.forceX(function(d){ return (d.groupx * width * 0.7 / 6)}).strength(1))
+    .force("y", d3.forceY(function(d){ console.log(d.groupy * height * 0.2 / 6) ; return (d.groupy * height * 0.2 / 6)}).strength(force_output.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
     .force("center", d3.forceCenter(width * 2/3, height / 2))
     .force("collision", d3.forceCollide().radius(25));
+    //.force("y", d3.forceY(height/2).strength(force_output.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
 
 // #########################################
 // # Get graph from api and draw SVG graph #
@@ -1300,6 +1305,11 @@ d3.json(apiUrl + "/graph")
       .scaleExtent([1, 8])
       .on("zoom", zoomed)
     );
+    //var drag = force.drag()
+    svg.call(d3.drag()
+    .on("start", onDragStart)
+    .on("drag", onDrag));
+
     //console.timeEnd('AddEventGraph')
 
     //console.time('AddNodeImageGraph')
@@ -1309,7 +1319,7 @@ d3.json(apiUrl + "/graph")
       .attr("height", 32)
       .attr("x", - 16)
       .attr("y", - 16)
-      .attr("fill", function(d) { /*console.log(d.group) ; */ return color(d.group)
+      .attr("fill", function(d) { /*console.log(d.group) ; */ return color(d.groupx)
     });
     //console.timeEnd('AddNodeImageGraph')
 
@@ -1391,15 +1401,31 @@ function dragended(event, d) {
   d.fy = null;
 }
 
+function validate(x, a, b) {
+    if (x < a) x = a;
+    if (x > b) x = b;
+    return x;
+}
+
+function onDragStart(d) {
+    d.fixed = true;
+}
+
+function onDrag(d) {
+   d.px = validate(d.px, 0, w);
+   d.py = validate(d.py, 0, h);
+}
+
+
 function zoomed(event) {
   svg.attr("transform", event.transform);
 }
 
 // ### LAST IN SCRIPT UPDATING SLIDER POSITION
 // ###########################################
-var elem = document.getElementById("scale_slider");
-var svg_element = document.getElementById('primary-svg');
-var positionInfo = svg_element.getBoundingClientRect();
-elem.value = positionInfo.width;
-var elem2 = document.getElementById("scale_indicator");
-elem2.value = positionInfo.width;
+//var elem = document.getElementById("scale_slider");
+//var svg_element = document.getElementById('primary-svg');
+//var positionInfo = svg_element.getBoundingClientRect();
+//elem.value = positionInfo.width;
+//var elem2 = document.getElementById("scale_indicator");
+//elem2.value = positionInfo.width;
