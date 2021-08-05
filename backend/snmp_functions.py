@@ -106,7 +106,7 @@ def get_table(
         *construct_object_types(oids),
         lexicographicMode=False,
     )
-    return fetch(handler, len(oids))
+    return fetch(handler, 1000)
 
 
 def get(
