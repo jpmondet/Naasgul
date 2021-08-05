@@ -1247,7 +1247,7 @@ d3.json(apiUrl + "/graph")
         .attr("fill", "none")
         //.attr("opacity", "0%")
         .attr("stroke", function(d) { return percentage_to_utilization_color(d.highest_utilization) })   // # COLOR
-        .attr("stroke-width", function(d) { return Math.sqrt(parseInt(d.speed) / 1000000) })  // # WIDTH
+        .attr("stroke-width", function(d) { return (Math.sqrt(parseInt(d.speed) / 1000000)) % 10 })  // # WIDTH
         .attr("source", function(d) { d.source })
         .attr("target", function(d) { d.target }
     );
