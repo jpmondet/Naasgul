@@ -13,13 +13,13 @@ That means that this project aims to output a map of the network topology and re
 - `python3 -m venv venv`
 - `. venv/bin/activate`
 - `python3 -m pip install -r requirements-dev.txt`
-- `cd frontend ; nodeenv --without-ssl nodeenv ; . nodeenv/bin/activate ; npm install terser -g ; cd ..`
+- `cd frontend ; nodeenv --without-ssl nodeenv ; . nodeenv/bin/activate ; npm install terser -g ; npm install html-minifier-terser -g ; cd ..`
 - `export REPO_PATH=$(pwd)`
 - export LLDP_INIT_NODE_FQDN="node_name" (or LLDP_INIT_NODE_IP if there is no fqdn. LLDP_INIT_NODE_PORT if different snmp port)
 - If scrapping must stop at a particular device : LLDP_STOP_NODES_FQDN or LLDP_STOP_NODES_IP
   - export LLDP_STOP_NODES_FQDN=fqdn1,fqdn2
 - Those LLDP variables can be specified in a `.env` file if using `docker-compose`
-- `cd frontend/ ; . nodeenv/bin/activate ; terser automapping-script.js -o public-html/automapping-script.min.js ; cd .. ; docker-compose up -V --force-recreate --always-recreate-deps --build --remove-orphans`
+- `cd frontend/ ; . nodeenv/bin/activate ; terser automapping-script.js -o public-html/automapping-script.min.js ; html-minifier-terser --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --remove-script-type-attributes --remove-tag-whitespace --use-short-doctype --minify-css true --minify-js true index.html -o public-html/index.html ;  cd .. ; docker-compose up -V --force-recreate --always-recreate-deps --build --remove-orphans`
 - Browser to http://127.0.0.1:8080
 
 ## Play gitlab-ci locally
