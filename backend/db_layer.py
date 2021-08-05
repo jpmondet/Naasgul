@@ -81,9 +81,12 @@ def get_all_highest_utilizations() -> Dict[str, int]:
         if utilizations.get(id_utilz):
             continue
         try:
-            highest_utilization = utilization["last_utilization"] - utilization["prev_utilization"]
-            if highest_utilization < 0:
+            if not utilization["prev_utilization"]:
                 highest_utilization = 0
+            else:
+                highest_utilization = utilization["last_utilization"] - utilization["prev_utilization"]
+                if highest_utilization < 0:
+                    highest_utilization = 0
         except KeyError:
             highest_utilization = 0
         utilizations[id_utilz] = highest_utilization
