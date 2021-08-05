@@ -43,7 +43,7 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
             or ifname.startswith("nu")
             or ifname.startswith("lo")
             or ifname.startswith("mgm")
-            or ifname.startswith("mana")
+            or ifname.startswith("ma")
             or ifname.startswith("po")
             or ifname == "vlan1"
         ):
@@ -69,18 +69,18 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
             "mtu": mtu,
             "mac": hexlify(mac.encode()).decode(),
             "speed": speed,
-            "in_discards": in_disc,
-            "in_errors": in_err,
-            "out_discards": out_disc,
-            "out_errors": out_err,
-            "in_bytes": in_octets,
-            "in_ucast_pkts": in_ucast_pkts,
-            "in_mcast_pkts": in_mcast_pkts,
-            "in_bcast_pkts": in_bcast_pkts,
-            "out_bytes": out_octets,
-            "out_ucast_pkts": out_ucast_pkts,
-            "out_mcast_pkts": out_mcast_pkts,
-            "out_bcast_pkts": out_bcast_pkts,
+            "in_discards": int(in_disc) % (2**64 - 1),
+            "in_errors": int(in_err) % (2**64 - 1),
+            "out_discards": int(out_disc) % (2**64 - 1),
+            "out_errors": int(out_err) % (2**64 - 1),
+            "in_bytes": int(in_octets) % (2**64 - 1),
+            "in_ucast_pkts": int(in_ucast_pkts) % (2**64 - 1),
+            "in_mcast_pkts": int(in_mcast_pkts) % (2**64 - 1),
+            "in_bcast_pkts": int(in_bcast_pkts) % (2**64 - 1),
+            "out_bytes": int(out_octets) % (2**64 - 1),
+            "out_ucast_pkts": int(out_ucast_pkts) % (2**64 - 1),
+            "out_mcast_pkts": int(out_mcast_pkts) % (2**64 - 1),
+            "out_bcast_pkts": int(out_bcast_pkts) % (2**64 - 1),
         }
 
         iface_name = "/".join(
@@ -114,6 +114,9 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         add_iface_stats(stats_list)
     except InvalidOperation:
         print("Nothing to dump to db (wasn't able to scrap devices?), passing..")
+    except OverflowError:
+        print("OverflowError 0_o (int longer than 64bit) : " + str(utilization_list))
+
 
 
 async def get_stats_and_dump(target_name, oids, credentials, count_oid, target_ip=None, port=161):
@@ -162,10 +165,11 @@ def main():
                         ]
                     )
                 )
+            sleep(int(60 * (len(devices) / int(NB_THREADS))))
         else:
             print("No devices retrieved from db... Waiting till there are any.")
+            sleep(60)
 
-        sleep(int(60 * (len(devices) / int(NB_THREADS))))
 
 
 if __name__ == "__main__":
