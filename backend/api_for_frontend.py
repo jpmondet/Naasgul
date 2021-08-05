@@ -228,9 +228,9 @@ def get_graph():
         logger.error(f"Nb links to format:{len(sorted_links)}")
         for link in sorted_links:
             device = link["device_name"]
-            iface = link["iface_name"]
+            iface = str(link["iface_name"])
             neigh = link["neighbor_name"]
-            neigh_iface = link["neighbor_iface"]
+            neigh_iface = str(link["neighbor_iface"])
 
             id_link = device + neigh
             id_link_neigh = neigh + device
@@ -238,18 +238,18 @@ def get_graph():
             try:
                 speed = speeds[device + iface]
                 speed = speed * 1000000  # Convert speed to bits
-            except KeyError:
-                speed = 1  # Can't determine speed
-                logger.error(f"Cant find speed for {device+iface} in {speeds}")
-
-            try:
                 highest_utilization = utilizations[device + iface]
                 highest_utilization = highest_utilization * 8  # convert to bits
+                percent_highest = highest_utilization / speed * 100
+                if percent_highest > 100:
+                    print(device, iface, speed, highest_utilization, percent_highest)
+                    percent_highest = 0
             except KeyError:
+                speed = 1000000  # Can't determine speed
                 highest_utilization = 0  # Can't determine speed
-                logger.error(f"Cant find utilization for {device+iface} in {utilizations}")
+                percent_highest = 0
+                #logger.error(f"Cant find speed for {device+iface} in {speeds}")
 
-            percent_highest = highest_utilization / speed * 100
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):
 
@@ -391,7 +391,7 @@ def stats(devices: List[str] = Query(None)):
 @app.get("/neighborships/")
 # Leveraging query string validation built in FastApi to avoid having multiple IFs
 def neighborships(
-    device: str = Query(..., min_length=7, max_length=25)  # , regex="^[a-z]{2,3}[0-9]{1}.iou$")
+    device: str = Query(..., min_length=1, max_length=100)  # , regex="^[a-z]{2,3}[0-9]{1}.iou$")
 ):
     """
     {
