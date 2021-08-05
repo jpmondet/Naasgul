@@ -49,6 +49,10 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         ):
             # TODO: Mgmt ifaces/lo & po could actually be interesting... Need to think about this
             continue
+        _, ifalias = next(search(iface, f"{NEEDED_MIBS['iface_alias']}*", yielded=True))
+        #if not ifalias:
+        #    # We won't get stats of ifaces with no description
+        #    continue
         _, mtu = next(search(iface, f"{NEEDED_MIBS['mtu']}*", yielded=True))
         _, mac = next(search(iface, f"{NEEDED_MIBS['mac']}*", yielded=True))
         _, speed = next(search(iface, f"{NEEDED_MIBS['speed']}*", yielded=True))
@@ -66,6 +70,7 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         _, out_bcast_pkts = next(search(iface, f"{NEEDED_MIBS['out_bcast_pkts']}*", yielded=True))
 
         iface_infos_dict = {
+            "ifalias": ifalias,
             "mtu": mtu,
             "mac": hexlify(mac.encode()).decode(),
             "speed": speed,

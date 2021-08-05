@@ -9,6 +9,7 @@ from pysnmp.entity.rfc3413.oneliner import cmdgen  # type: ignore
 IFACES_TABLE_TO_COUNT = "1.3.6.1.2.1.2.1.0"
 NEEDED_MIBS_FOR_STATS = {
     "iface_name": "1.3.6.1.2.1.2.2.1.2",  # ifDescr
+    "iface_alias": "1.3.6.1.2.1.31.1.1.1.18",  # ifAlias
     "mtu": "1.3.6.1.2.1.2.2.1.4",  # ifMtu
     "speed": "1.3.6.1.2.1.31.1.1.1.15",  # ifHighSpeed
     "mac": "1.3.6.1.2.1.2.2.1.6",  # ifPhysAddress
