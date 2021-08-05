@@ -62,16 +62,23 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
         _, local_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_local_iface']}*", yielded=True))
         _, neigh_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface']}*", yielded=True))
         # Stripping "Et, Ethernet, E,... " which can be different per equipment
-        dev_iface = "/".join(
-            "".join(x)
-            for is_number, x in groupby(local_iface, key=str.isdigit)
-            if is_number is True
-        )
-        neigh_iface = "/".join(
-            "".join(x)
-            for is_number, x in groupby(neigh_iface, key=str.isdigit)
-            if is_number is True
-        )
+        if isinstance(local_iface, str):
+            dev_iface = "/".join(
+                "".join(x)
+                for is_number, x in groupby(local_iface, key=str.isdigit)
+                if is_number is True
+            )
+        else:
+            dev_iface = str(dev_iface)
+
+        if isinstance(neigh_iface, str):
+            neigh_iface = "/".join(
+                "".join(x)
+                for is_number, x in groupby(neigh_iface, key=str.isdigit)
+                if is_number is True
+            )
+        else:
+            neigh_iface = str(neigh_iface)
 
         query_link = {
             "device_name": dev_name,
