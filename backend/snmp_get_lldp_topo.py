@@ -168,7 +168,7 @@ def main():
             )
 
         # sleep(300)
-        sleep(int(60 * (len(devices) / int(NB_THREADS))))
+        sleep(int(60 * (len(devices) / int(NB_THREADS))) + 30)
 
 
 if __name__ == "__main__":
