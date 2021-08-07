@@ -5,3 +5,4 @@ storage/db_back
 .env
 venv
 frontend/nodeenv/
+tests/__pycache__/
