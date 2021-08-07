@@ -14,6 +14,7 @@
 # pylint: disable=global-statement,logging-fstring-interpolation
 
 import logging
+import re
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from time import strftime, localtime, time
@@ -67,7 +68,7 @@ security = HTTPBasic()  # TODO: Needs better security
 CACHE: Dict[str, Any] = {}
 CACHED_TIME: int = 300
 TIME: int = int(time())
-TIMEOUT: bool = True
+CACHED_TIMEOUT: Dict[str, bool] = {}
 
 
 class Node(BaseModel):
@@ -106,8 +107,13 @@ def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 
 
 def get_from_db_or_cache(element: str, func=None, query=None):
-    global TIMEOUT, CACHE
-    if not CACHE.get(element) or TIMEOUT:
+    global CACHE, CACHED_TIMEOUT
+
+    timeout: bool = False
+    if CACHED_TIMEOUT.get(element):
+        timeout = CACHED_TIMEOUT[element]
+
+    if not CACHE.get(element) or timeout:
         if not func:
             return None
         logger.error(f"Oops, {element} not in cache, calling db")
@@ -115,19 +121,20 @@ def get_from_db_or_cache(element: str, func=None, query=None):
             CACHE[element] = func(query)
         else:
             CACHE[element] = func()
-        TIMEOUT = False
+        CACHED_TIMEOUT[element] = False
 
     return CACHE[element]
 
 
 def background_time_update():
-    global TIMEOUT, TIME
+    global CACHED_TIMEOUT, TIME
     now: int = int(time())
-    logger.error(f"bgtimeupd: {now}, {TIME}, {TIMEOUT}")
+    logger.error(f"bgtimeupd: {now}, {TIME}, {CACHED_TIMEOUT}")
     if now - TIME > CACHED_TIME:
-        TIMEOUT = True
         TIME = now
-    logger.error(f"bgtimeupdEnd: {now}, {TIME}, {TIMEOUT}")
+        for elem in CACHED_TIMEOUT.keys():
+            CACHED_TIMEOUT[elem] = True
+    logger.error(f"bgtimeupdEnd: {now}, {TIME}, {CACHED_TIMEOUT}")
 
 
 def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> None:
@@ -153,6 +160,45 @@ def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> Non
         for iface in node.ifaces:
             add_fake_iface_stats(node.name, iface)
             add_fake_iface_utilization(node.name, iface)
+
+def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
+    """ Tries to find to which groups the node should be affected
+    groupx is conditioned by the function of the device (if it's a core device
+    for example) and groupy is conditioned by its localisation.
+
+    Depending on your device naming, the regex should be modified"""
+
+    # Exemple for a device named sw1.iou
+    # We assume that 'sw' is the function and '1' its localisation (yeah
+    # not really a localisation but well, it's an example ;-) )
+    regex_pattern = re.compile("^([a-z]{2})([0-9]+).*", re.IGNORECASE)
+    matched = regex_pattern.match(node_name)
+    if not matched:
+        return (7, 1)
+    device_function = matched.group(1)
+    device_localisation = matched.group(2)
+
+    groupx: int = 1
+    groupy: int = 1
+    if not groups_known:
+        groups_known["sw"] = 1
+        groups_known["rtr"] = 2
+        groups_known["groupy"] = 1
+
+    try:
+        groupx = groups_known[device_function]
+    except KeyError:
+        # Unknown device function
+        return (7, 1)
+
+    try:
+        groupy = groups_known[device_localisation]
+    except KeyError:
+        groupy = groups_known["groupy"]
+        groups_known[device_localisation] = groupy
+        groups_known["groupy"] += 1
+
+    return (groupx, groupy)
 
 
 @app.get("/graph")
@@ -192,23 +238,14 @@ def get_graph():
 
     nodes: List[Dict[str, Any]] = get_from_db_or_cache("nodes", get_all_nodes)
 
+    groups: Dict[str, int] = {}
+
     for node in nodes:
-        if not node.get("groupx"): # or not node.get("image"):
-            # Test nodes
-            if "sw" in node["device_name"]:
-                node["groupx"] = 1
-                node["groupy"] = 1
-                node["image"] = "switch.png"
-            elif "rtr" in node["device_name"]:
-                node["groupx"] = 3
-                node["groupy"] = 3
-                node["image"] = "router.png"
-            else:
-                node["groupx"] = 4
-                node["groupy"] = 10
-                node["image"] = "router.png"
+        if not node.get("groupx") or not node.get("image"):
+            node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
 
         node["id"] = node["device_name"]
+        node["image"] = "router.png"
 
         try:
             del node["_id"]  # removing mongodb objectId
@@ -252,9 +289,9 @@ def get_graph():
                     percent_highest = 0
             except KeyError:
                 speed = 1000000  # Can't determine speed
-                highest_utilization = 0  # Can't determine utilization since it's based on max link speed
+                highest_utilization = 0  # Can't determine speed
                 percent_highest = 0
-                logger.error(f"Cant find speed for {device+iface} in {speeds}")
+                #logger.error(f"Cant find speed for {device+iface} in {speeds}")
 
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):
@@ -298,8 +335,9 @@ def get_graph():
         # logger.error(formatted_links)
         # logger.error(f'Format links End: {time() - start_format_timer}')
 
-        global CACHE
+        global CACHE, CACHED_TIMEOUT
         CACHE["formatted_links"] = formatted_links
+        CACHED_TIMEOUT["formatted_links"] = False
 
     return {"nodes": nodes, "links": list(formatted_links.values())}
 
@@ -330,6 +368,8 @@ def stats(devices: List[str] = Query(None)):
             #    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
             # if "iou" not in device:
             #    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+        # TODO: if LEN stats_by_device = 2 -> find ifaces between the 2 devices to return only that
 
         stats_by_device: Dict[str, Any] = get_from_db_or_cache(f"stats_by_device_{devices}")
 
@@ -385,8 +425,9 @@ def stats(devices: List[str] = Query(None)):
 
                     stats_by_device[dname][ifname]["stats"].append(stat_formatted)
 
-            global CACHE
+            global CACHE, CACHED_TIMEOUT
             CACHE[f"stats_by_device_{devices}"] = stats_by_device
+            CACHED_TIMEOUT[f"stats_by_device_{devices}"] = False
 
         return stats_by_device
 
@@ -446,8 +487,9 @@ def neighborships(
             }
 
         neighs = list(neighs_dict.values())
-        global CACHE
+        global CACHE, CACHED_TIMEOUT
         CACHE[f"neighs_{device}"] = neighs
+        CACHED_TIMEOUT[f"neighs_{device}"] = False
 
     return neighs
 
