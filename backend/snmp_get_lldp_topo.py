@@ -48,13 +48,27 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
     for lldp_nei in lldp_infos:
         # Getting neigh node infos and adding it to nodes_list
         _, neigh_name = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_name']}*", yielded=True))
-        if not neigh_name:
-            continue
-        neigh_name = neigh_name.lower()
 
         # IP is a lil' special since it is written in the oid (yeah weird)
         neigh_ip_oid, _ = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_ip']}*", yielded=True))
         neigh_ip = ".".join(neigh_ip_oid.split(".")[-4:])
+        if neigh_name == "null" and neigh_ip:
+            #if neigh_ip == "0.0.0.0":
+            #    continue
+            #neigh_name == neigh_ip
+            continue
+        elif not neigh_name and neigh_ip:
+            #if neigh_ip == "0.0.0.0":
+            #    continue
+            #neigh_name = neigh_ip
+            continue
+        elif not neigh_name:
+            continue
+        elif neigh_name == "null":
+            continue
+        neigh_name = neigh_name.lower()
+        if neigh_name == "localhost.localdomain":
+            continue
         query_neigh = {"device_name": neigh_name}
         nodes_list.append((query_neigh, {"device_name": neigh_name, "device_ip": neigh_ip}))
 
