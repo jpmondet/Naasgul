@@ -1147,7 +1147,7 @@ force_slider.oninput = function() {
   //console.log("force_output: " + this.value)
 
   //simulation.force("y", d3.forceY(height/2).strength(this.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
-  simulation.force("y", d3.forceY(function(d){ console.log(d.groupy * height * 0.2 / 6) ; return (d.groupy * height * 0.2 / 6)}).strength(this.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
+  simulation.force("y", d3.forceY(function(d){ return (d.groupy * height * 0.2 / 6)}).strength(this.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
   //console.log("starting simulation");
   simulation.alphaTarget(0.03).restart()
   simulation.alpha(1).restart()
@@ -1162,7 +1162,7 @@ var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id }).distance(100).strength(0.001))
     .force("charge", d3.forceManyBody().strength(-200).distanceMax(500).distanceMin(150))
     .force("x", d3.forceX(function(d){ return (d.groupx * width * 0.7 / 6)}).strength(1))
-    .force("y", d3.forceY(function(d){ console.log(d.groupy * height * 0.2 / 6) ; return (d.groupy * height * 0.2 / 6)}).strength(force_output.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
+    .force("y", d3.forceY(function(d){ return (d.groupy * height * 0.2 / 6)}).strength(force_output.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
     .force("center", d3.forceCenter(width * 2/3, height / 2))
     .force("collision", d3.forceCollide().radius(25));
     //.force("y", d3.forceY(height/2).strength(force_output.value / 1000))  //### PARAMETRIZED FORCE TO SLIDER
