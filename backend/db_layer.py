@@ -149,17 +149,6 @@ def get_latest_utilization(device_name: str, iface_name: str):
         return 0, 0
 
 
-def get_highest_utilization(device_name: str, iface_name: str):
-    utilization_line = UTILIZATION_COLLECTION.find_one(
-        {"device_name": device_name, "iface_name": iface_name}
-    )
-    try:
-        utilization = utilization_line["last_utilization"] - utilization_line["prev_utilization"]
-        return utilization
-    except (KeyError, TypeError):
-        return 0
-
-
 def add_iface_stats(stats: List[Dict[str, Any]]) -> None:
     STATS_COLLECTION.insert_many(stats)
 
