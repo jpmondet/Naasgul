@@ -381,6 +381,8 @@ def stats(devices: List[str] = Query(None)):
                 list(get_stats_devices(devices)),
                 key=lambda d: (d["device_name"], d["iface_name"], d["timestamp"]),
             )
+            prev_inbits: int = 0
+            prev_outbits: int = 0
             for stat in sorted_stats:
                 dname = stat["device_name"]
                 # ifname = stat["iface_name"].replace("Ethernet", "Et")
@@ -389,8 +391,8 @@ def stats(devices: List[str] = Query(None)):
                 inttimestamp: int = int(dbtime)
                 timestamp = strftime("%y-%m-%d %H:%M:%S", localtime(inttimestamp))
                 stat_formatted = {"InSpeed": 0, "OutSpeed": 0, "time": timestamp}
-                inbits: int = int(stat["in_bytes"]) * 8
-                outbits: int = int(stat["out_bytes"]) * 8
+                inbits = int(stat["in_bytes"]) * 8
+                outbits = int(stat["out_bytes"]) * 8
                 # This iface wasn't in the struct.
                 # We add default infos (and speed to 0 since
                 # we don't know at how much speed it was before)
@@ -411,11 +413,11 @@ def stats(devices: List[str] = Query(None)):
                     prev_timestamp: int = int(
                         datetime.strptime(prev_date, "%y-%m-%d %H:%M:%S").timestamp()
                     )
-                    prev_inbits: int = stats_by_device[dname][ifname]["stats"][-1]["InSpeed"]
-                    prev_outbits: int = stats_by_device[dname][ifname]["stats"][-1]["OutSpeed"]
+                    #prev_inbits: int = stats_by_device[dname][ifname]["stats"][-1]["InSpeed"]
+                    #prev_outbits: int = stats_by_device[dname][ifname]["stats"][-1]["OutSpeed"]
 
                     interval = inttimestamp - prev_timestamp
-                    if interval:
+                    if interval > 0:
                         in_speed: int = inbits - prev_inbits
                         in_speed = in_speed if in_speed >= 0 else -in_speed
                         out_speed: int = outbits - prev_outbits
@@ -424,6 +426,9 @@ def stats(devices: List[str] = Query(None)):
                         stat_formatted["OutSpeed"] = int(out_speed / interval)
 
                     stats_by_device[dname][ifname]["stats"].append(stat_formatted)
+
+                prev_inbits = inbits
+                prev_outbits = outbis
 
             global CACHE, CACHED_TIMEOUT
             CACHE[f"stats_by_device_{devices}"] = stats_by_device
