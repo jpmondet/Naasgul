@@ -13,7 +13,7 @@ from db_layer import prep_db_if_not_exist
 
 delete_all_collections_datas()
 prep_db_if_not_exist()
-add_fake_datas(12, 5)
+add_fake_datas(12, 5, False, False)
 
 TEST_GRAPH_DATA = {}
 with open("tests/graph_datas.json") as graph_datas:
