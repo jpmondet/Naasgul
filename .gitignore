@@ -6,3 +6,4 @@ storage/db_back
 venv
 frontend/nodeenv/
 tests/__pycache__/
+backend/__pycache__/
