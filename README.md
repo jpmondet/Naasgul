@@ -6,6 +6,8 @@
 The goal here is to have an automated replacement to weathermap.  
 That means that this project aims to output a map of the network topology and regularly poll the devices to show the links utilization.
 
+![alt text](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_fabric_with_used_links.png "Sample fabric with used links")
+
 (Was greatly inspired by a similar PoC project from `zerxen` at first)
 
 ## Quick Non-prod Usage
