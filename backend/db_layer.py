@@ -82,13 +82,13 @@ def get_all_highest_utilizations() -> Dict[str, int]:
         id_utilz = utilization["device_name"] + utilization["iface_name"]
         if utilizations.get(id_utilz):
             continue
-        if current_timestamp - utilization["timestamp"] > 1300:
-            # utilization is expired... We just return 0 as 'unknown'
-            # (remember, it's just to colorize links so there's no use to show
-            # a link red if its utilization possibly went down already)
-            highest_utilization: int = 0
-        else:
-            try:
+        try:
+            if current_timestamp - utilization["timestamp"] > 1300:
+                # utilization is expired... We just return 0 as 'unknown'
+                # (remember, it's just to colorize links so there's no use to show
+                # a link red if its utilization possibly went down already)
+                highest_utilization: int = 0
+            else:
                 if not utilization["prev_timestamp"]:
                     highest_utilization = 0
                 elif not utilization["prev_utilization"]:
@@ -99,8 +99,8 @@ def get_all_highest_utilizations() -> Dict[str, int]:
                     highest_utilization = max(utilization["last_utilization"] - utilization["prev_utilization"], 0)
 
                     highest_utilization = int(highest_utilization / interval)
-            except KeyError:
-                highest_utilization = 0
+        except KeyError:
+            highest_utilization = 0
 
         utilizations[id_utilz] = highest_utilization
 
@@ -144,7 +144,7 @@ def get_latest_utilization(device_name: str, iface_name: str):
         {"device_name": device_name, "iface_name": iface_name}
     )
     try:
-        return utilization_line["last_utilization"], utilization_line["last_timestamp"]
+        return utilization_line["last_utilization"], utilization_line["timestamp"]
     except (KeyError, TypeError):
         return 0, 0
 
