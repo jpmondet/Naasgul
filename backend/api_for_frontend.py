@@ -414,6 +414,7 @@ def stats(devices: List[str] = Query(None)):
             )
             prev_inbits: int = 0
             prev_outbits: int = 0
+            prev_timestamp: int = 0
             for stat in sorted_stats:
                 dname = stat["device_name"]
                 # ifname = stat["iface_name"].replace("Ethernet", "Et")
@@ -439,13 +440,10 @@ def stats(devices: List[str] = Query(None)):
                     }
                 else:
                     # Must calculate speed. Not just adding in_bytes or it will only increase.
-                    # Assuming it's ordered for now
-                    prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
-                    prev_timestamp: int = int(
-                        datetime.strptime(prev_date, "%y-%m-%d %H:%M:%S").timestamp()
-                    )
-                    #prev_inbits: int = stats_by_device[dname][ifname]["stats"][-1]["InSpeed"]
-                    #prev_outbits: int = stats_by_device[dname][ifname]["stats"][-1]["OutSpeed"]
+                    #prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
+                    #prev_timestamp: int = int(
+                    #    datetime.strptime(prev_date, "%y-%m-%d %H:%M:%S").timestamp()
+                    #)
 
                     interval = inttimestamp - prev_timestamp
                     if interval > 0:
@@ -460,6 +458,7 @@ def stats(devices: List[str] = Query(None)):
 
                 prev_inbits = inbits
                 prev_outbits = outbits
+                prev_timestamp = inttimestamp
 
             global CACHE, CACHED_TIMEOUT
             CACHE[f"stats_by_device_{devices}"] = stats_by_device
