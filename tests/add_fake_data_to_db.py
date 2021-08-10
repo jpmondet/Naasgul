@@ -53,12 +53,12 @@ def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
                 )
 
 
-def add_iface_utilization(device_name: str, iface_name: str, node_number: int):
+def add_iface_utilization(device_name: str, iface_name: str, iface_bytes: int):
     previous_utilization, previous_timestamp = get_latest_utilization(device_name, iface_name)
 
-    last_utilization = node_number
+    last_utilization = iface_bytes * 8
     if previous_timestamp > 0:
-        last_utilization = previous_utilization + (10000000 - previous_utilization) / 2
+        last_utilization = previous_utilization + randint(0, 10000000)
 
     db.utilization.update_one(
         {"device_name": f"{device_name}", "iface_name": f"{iface_name}"},
@@ -76,7 +76,9 @@ def add_iface_utilization(device_name: str, iface_name: str, node_number: int):
     )
 
 
-def add_iface_stats(device_name: str, iface_name: str, node_number: int):
+def add_iface_stats(device_name: str, iface_name: str, iface_bytes: int):
+    previous_utilization, _ = get_latest_utilization(device_name, iface_name)
+    previous_utilization = int(previous_utilization / 8)
     db.stats.insert_one(
         {
             "device_name": f"{device_name}",
@@ -90,11 +92,11 @@ def add_iface_stats(device_name: str, iface_name: str, node_number: int):
             "in_errors": 0,
             "out_discards": 0,
             "out_errors": 0,
-            "in_bytes": node_number + randint(0, 10000000),
+            "in_bytes": previous_utilization + iface_bytes,
             "in_ucast_pkts": 0,
             "in_mcast_pkts": 0,
             "in_bcast_pkts": 0,
-            "out_bytes": node_number + randint(0, 10000000),
+            "out_bytes": previous_utilization + iface_bytes,
             "out_ucast_pkts": 0,
             "out_mcast_pkts": 0,
             "out_bcast_pkts": 0,
@@ -104,11 +106,7 @@ def add_iface_stats(device_name: str, iface_name: str, node_number: int):
 
 def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = False):
 
-    node_number: int = 0
-
     nodes_per_stages: int = int(number_nodes / fabric_stages)
-
-    node_increment: int = int(1250000 / number_nodes)
 
     for stage in range(fabric_stages):
         if stage == 0:
@@ -143,15 +141,14 @@ def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = 
                         }
                     )
 
-                print(up_device, down_iface, down_device, up_iface, node_number, number_nodes)
-                add_iface_stats(up_device, down_iface, node_number)
-                add_iface_utilization(up_device, down_iface, node_number)
+                iface_bytes: int = randint(0, 1250000)
 
-                add_iface_stats(down_device, up_iface, node_number)
-                add_iface_utilization(down_device, up_iface, node_number)
+                print(up_device, down_iface, down_device, up_iface, iface_bytes, number_nodes)
+                add_iface_stats(up_device, down_iface, iface_bytes)
+                add_iface_utilization(up_device, down_iface, iface_bytes)
 
-            # node_number += randint(0, node_increment)
-            node_number += node_increment
+                add_iface_stats(down_device, up_iface, iface_bytes)
+                add_iface_utilization(down_device, up_iface, iface_bytes)
 
 
 def add_links_not_generic():
