@@ -323,8 +323,12 @@ def get_graph():
 
                 if iface not in formatted_links[id_link]["source_interfaces"]:
                     formatted_links[id_link]["source_interfaces"].append(iface)
+                else:
+                    continue
                 if neigh_iface not in formatted_links[id_link]["target_interfaces"]:
                     formatted_links[id_link]["target_interfaces"].append(neigh_iface)
+                else:
+                    continue
 
                 # Since 1 (visual) link will aggregate multiple (actual) links
                 # we recalculate utilization/speed for the aggregated (visual) link
@@ -395,7 +399,8 @@ def stats(devices: List[str] = Query(None)):
             # if "iou" not in device:
             #    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-        # TODO: if LEN stats_by_device = 2 -> find ifaces between the 2 devices to return only that
+        # Not todo anymore :P if LEN stats_by_device = 2 -> find ifaces between the 2 devices to return only that
+        # Would be needed if we disaggregated links again
 
         stats_by_device: Dict[str, Any] = get_from_db_or_cache(f"stats_by_device_{devices}")
 
