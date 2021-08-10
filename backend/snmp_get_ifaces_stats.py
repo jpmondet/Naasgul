@@ -103,8 +103,7 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         query = {"device_name": device_name, "iface_name": iface_name}
         highest = int(iface_infos_dict["in_bytes"])
         lowest = int(iface_infos_dict["out_bytes"])
-        if lowest > highest:
-            highest = lowest
+        highest = max(highest, lowest)
         previous_utilization, previous_timestamp = get_latest_utilization(device_name, iface_name)
         utilization = {
             "device_name": device_name,
