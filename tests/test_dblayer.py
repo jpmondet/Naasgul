@@ -38,14 +38,17 @@ with open("tests/neighs_datas.json") as neighs_datas:
 
 
 def test_get_latest_utilization():
-    latest = get_latest_utilization("fake_device_stage1_1", "1/1")
-    print(latest)
-    assert latest == 1250000
+    latest, timestamp = get_latest_utilization("fake_device_stage1_1", "1/1")
+    assert isinstance(latest, int)
+    assert isinstance(timestamp, int)
+    assert latest >= 0
+    assert latest < 10000000
 
 
 def test_get_latest_utilization_not_existing():
-    latest = get_latest_utilization("Device_that_not_exist", "1/1")
+    latest, timestamp = get_latest_utilization("Device_that_not_exist", "1/1")
     assert latest == 0
+    assert timestamp == 0
 
 
 def test_add_iface_stats():
@@ -79,17 +82,24 @@ def test_bulk_update_collection():
     device_name = "fake_device_stage1_1"
     iface_name = "6/6"
     prev_utilization = 1337
+    prev_timestamp = 1337
     last_utilization = 1337
+    timestamp = 1338
 
     query = {"device_name": device_name, "iface_name": iface_name}
     utilization = {
         "device_name": device_name,
         "iface_name": iface_name,
         "prev_utilization": prev_utilization,
+        "prev_timestamp": prev_timestamp,
         "last_utilization": last_utilization,
+        "timestamp": timestamp,
     }
     utilization_list = [(query, utilization)]
 
     bulk_update_collection(UTILIZATION_COLLECTION, utilization_list)
 
-    assert get_latest_utilization(device_name, iface_name) == last_utilization
+    last_db_utilization, last_db_timestamp = get_latest_utilization(device_name, iface_name)
+
+    assert last_utilization == last_db_utilization
+    assert timestamp == last_db_timestamp

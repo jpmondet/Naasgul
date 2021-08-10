@@ -102,9 +102,13 @@ def add_iface_stats(device_name: str, iface_name: str, iface_bytes: int, previou
     )
 
 
-def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = False):
+def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = False, random_bytes: bool = True):
+
+    node_number: int = 0
 
     nodes_per_stages: int = int(number_nodes / fabric_stages)
+
+    node_increment: int = int(1250000 / number_nodes)
 
     for stage in range(fabric_stages):
         if stage == 0:
@@ -139,7 +143,7 @@ def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = 
                         }
                     )
 
-                iface_bytes: int = randint(0, 1250000)
+                iface_bytes: int = randint(0, 1250000) if random_bytes else node_number
                 previous_utilization, previous_timestamp = get_latest_utilization(up_device, down_iface)
 
                 print(up_device, down_iface, down_device, up_iface, iface_bytes, number_nodes)
@@ -148,6 +152,8 @@ def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = 
 
                 add_iface_stats(down_device, up_iface, iface_bytes, previous_utilization)
                 add_iface_utilization(down_device, up_iface, iface_bytes, previous_utilization, previous_timestamp)
+
+            node_number += node_increment
 
 
 def add_links_not_generic():
@@ -334,13 +340,13 @@ def add_stats_not_generic():
             )
 
 
-def add_fake_datas(nb_nodes: int, fabric_stages: int, add_stats_only: bool = False):
+def add_fake_datas(nb_nodes: int, fabric_stages: int, add_stats_only: bool = False, random_bytes: bool = True):
 
     fabric_stages = 1 if fabric_stages == 1 else int(fabric_stages / 2 + 1)
 
     if not add_stats_only:
         add_lots_of_nodes(nb_nodes, fabric_stages)
-    add_lots_of_links(nb_nodes, fabric_stages, add_stats_only)
+    add_lots_of_links(nb_nodes, fabric_stages, add_stats_only, random_bytes)
 
 
 def delete_all_collections_datas():
@@ -377,6 +383,13 @@ def main():
         default=False,
     )
     parser.add_argument(
+        "-r",
+        "--random_bytes",
+        type=bool,
+        help="By default, it adds fake datas with random bytes on the ifaces/utilizations. Can be set to false for tests and stuff to have predictive results",
+        default=True,
+    )
+    parser.add_argument(
         "-rm",
         "--rm_db",
         type=bool,
@@ -395,12 +408,12 @@ def main():
         sexit(1)
 
     if args.add_stats_only:
-        add_fake_datas(args.number_nodes, args.fabric_stages, True)
+        add_fake_datas(args.number_nodes, args.fabric_stages, True, args.random_bytes)
         sexit(0)
 
     prep_db_if_not_exist()
 
-    add_fake_datas(args.number_nodes, args.fabric_stages)
+    add_fake_datas(args.number_nodes, args.fabric_stages, False, args.random_bytes)
 
     for res in db.nodes.find():
         print(res)

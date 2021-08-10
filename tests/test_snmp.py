@@ -1,5 +1,3 @@
-"""Those tests are only focused on functions that are not tested by test_api (which
-    already calls most db_layer functions)"""
 #! /bin/env python3
 
 import sys, os
@@ -9,15 +7,8 @@ from fastapi.exceptions import HTTPException
 from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
 
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
-from db_layer import (
-    prep_db_if_not_exist,
-    get_latest_utilization,
-    add_iface_stats,
-    bulk_update_collection,
-    get_stats_devices,
-    UTILIZATION_COLLECTION,
-    get_latest_utilization,
-)
+from api_for_frontend import get_graph, stats, neighborships
+from db_layer import prep_db_if_not_exist
 
 
 delete_all_collections_datas()
@@ -37,59 +28,102 @@ with open("tests/neighs_datas.json") as neighs_datas:
     TEST_NEIGHS_DATA = json.load(neighs_datas)
 
 
-def test_get_latest_utilization():
-    latest = get_latest_utilization("fake_device_stage1_1", "1/1")
-    print(latest)
-    assert latest == 1250000
+def test_graph_nodes():
+    graph = get_graph()
+    assert graph["nodes"] == TEST_GRAPH_DATA["nodes"]
 
 
-def test_get_latest_utilization_not_existing():
-    latest = get_latest_utilization("Device_that_not_exist", "1/1")
-    assert latest == 0
+def test_graph_links():
+    graph = get_graph()
+    sorted_links = sorted(graph["links"],key=lambda d: (d["source"], d["target"]))
+    sorted_test_links = sorted(TEST_GRAPH_DATA["links"], key=lambda d: (d["source"], d["target"]))
+    # assert graph["links"] == TEST_GRAPH_DATA["links"]
+    assert sorted_links == sorted_test_links
 
 
-def test_add_iface_stats():
-    device = "fake_device_stage1_1"
-    iface = "1/1"
-    timestamp = "now"
-    speed = 1337
+def test_stats_of_link_between_2_devices():
+    query = ["fake_device_stage1_1", "fake_device_stage1_2"]
+    stats_retrieved = stats(query)
+    # Cant check timestamp since test datas in json are static
+    for device_datas in stats_retrieved.values():
+        for iface_datas in device_datas.values():
+            for stat in iface_datas["stats"]:
+                stat["time"] = "N/A"
 
-    stats_list = [
-        {
-            "device_name": device,
-            "iface_name": iface,
-            "timestamp": timestamp,
-            "speed": speed,
+    print(json.dumps(stats_retrieved))
+    assert stats_retrieved == TEST_STATS_DATA
+
+
+def test_stats_of_1_device():
+    query = ["fake_device_stage1_1"]
+    stats_retrieved = stats(query)
+    # Cant check timestamp since test datas in json are static
+    for device_datas in stats_retrieved.values():
+        for iface_datas in device_datas.values():
+            for stat in iface_datas["stats"]:
+                stat["time"] = "N/A"
+
+    print(json.dumps(stats_retrieved))
+
+    test_datas_to_match = {
+        "fake_device_stage1_1": {
+            "1/1": {
+                "ifDescr": "1/1",
+                "index": "1/1",
+                "stats": [{"InSpeed": 0, "OutSpeed": 0, "time": "N/A"}],
+            },
+            "1/2": {
+                "ifDescr": "1/2",
+                "index": "1/2",
+                "stats": [{"InSpeed": 0, "OutSpeed": 0, "time": "N/A"}],
+            },
+            "1/3": {
+                "ifDescr": "1/3",
+                "index": "1/3",
+                "stats": [{"InSpeed": 0, "OutSpeed": 0, "time": "N/A"}],
+            },
+            "1/4": {
+                "ifDescr": "1/4",
+                "index": "1/4",
+                "stats": [{"InSpeed": 0, "OutSpeed": 0, "time": "N/A"}],
+            },
         }
-    ]
-    add_iface_stats(stats_list)
-
-    for device_stats in get_stats_devices([device]):
-        if (
-            device_stats["iface_name"] == iface
-            and device_stats["timestamp"] == timestamp
-            and device_stats["speed"] == speed
-        ):
-            return
-
-    raise (ValueError)
-
-
-def test_bulk_update_collection():
-    device_name = "fake_device_stage1_1"
-    iface_name = "6/6"
-    prev_utilization = 1337
-    last_utilization = 1337
-
-    query = {"device_name": device_name, "iface_name": iface_name}
-    utilization = {
-        "device_name": device_name,
-        "iface_name": iface_name,
-        "prev_utilization": prev_utilization,
-        "last_utilization": last_utilization,
     }
-    utilization_list = [(query, utilization)]
+    assert stats_retrieved == test_datas_to_match
 
-    bulk_update_collection(UTILIZATION_COLLECTION, utilization_list)
 
-    assert get_latest_utilization(device_name, iface_name) == last_utilization
+def test_stats_bad_request_not_list():
+    # Query should be a list
+    query = "fake_device_stage1_1"
+    with pytest.raises(HTTPException):
+        stats_retrieved = stats(query)
+
+
+def test_stats_bad_request_not_str_list():
+    # Query should be a list of str
+    query = [1]
+    with pytest.raises(HTTPException):
+        stats_retrieved = stats(query)
+
+
+def test_neighborships():
+    query = "fake_device_stage1_1"
+
+    neighs = neighborships(query)
+    print(json.dumps(neighs))
+
+    assert neighs == TEST_NEIGHS_DATA
+
+
+def test_neighborships_bad_request_with_int():
+    # Query should be a str
+    query = 1
+    with pytest.raises(HTTPException):
+        neighs = neighborships(query)
+
+
+def test_neighborships_bad_request_with_list():
+    # Query should be a str
+    query = ["test"]
+    with pytest.raises(HTTPException):
+        neighs = neighborships(query)

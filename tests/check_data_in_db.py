@@ -46,8 +46,8 @@ print(list(db.stats.find({'device_name': 'fake_device_stage1_1', 'iface_name': '
 #for stat in db.stats.find():
 #    print(stat)
 #print("\n\n\n\nUTILIZATION")
-#for utilization in db.utilization.find():
-#   print(utilization)
+for utilization in db.utilization.find():
+   print(utilization)
 # print(list(db.links.find({'device_name': 'fake_device_stage6_16', 'iface_name': '0/16'})))
 # l = list(db.stats.find({'device_name': 'fake_device_stage6_16', 'iface_name': '0/16'}))
 #l = list(db.stats.find({"device_name": "rtr3.iou", "iface_name": "0/0"}))
