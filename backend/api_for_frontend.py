@@ -17,6 +17,7 @@ import logging
 import re
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+from collections import defaultdict
 from time import strftime, localtime, time
 from secrets import compare_digest
 
@@ -253,6 +254,7 @@ def get_graph():
             pass
 
     formatted_links: Dict[str, Any] = get_from_db_or_cache("formatted_links")
+    highest_uses: Dict[str, int] = defaultdict(int)
     if not formatted_links:
         links: Dict[str, Any] = get_from_db_or_cache("links", get_all_links)
         sorted_links: List[Dict[str, Any]] = sorted(
@@ -305,31 +307,48 @@ def get_graph():
                     "linknum": 1,
                 }
                 formatted_links[id_link] = f_link
+                highest_uses[id_link] = highest_utilization
             else:
-                try:
-                    if iface not in formatted_links[id_link]["source_interfaces"]:
-                        formatted_links[id_link]["source_interfaces"].append(iface)
-                    if neigh_iface not in formatted_links[id_link]["target_interfaces"]:
-                        formatted_links[id_link]["target_interfaces"].append(neigh_iface)
-                except KeyError:
-                    if neigh_iface not in formatted_links[id_link_neigh]["source_interfaces"]:
-                        formatted_links[id_link_neigh]["source_interfaces"].append(neigh_iface)
-                    if iface not in formatted_links[id_link_neigh]["target_interfaces"]:
-                        formatted_links[id_link_neigh]["target_interfaces"].append(iface)
-                try:
-                    f_link_2 = formatted_links[id_link].copy()
-                    linknum = len(f_link_2["source_interfaces"])
-                    id_link_2 = id_link + str(linknum)
-                except KeyError:
-                    f_link_2 = formatted_links[id_link_neigh].copy()
-                    linknum = len(f_link_2["source_interfaces"])
-                    id_link_2 = id_link_neigh + str(linknum)
+                if formatted_links.get(id_link_neigh):
+                    id_link, id_link_neigh = id_link_neigh, id_link
+                    iface, neigh_iface = neigh_iface, iface
 
-                if linknum > 1:
-                    f_link_2["linknum"] = linknum
-                    f_link_2["highest_utilization"] = percent_highest
-                    f_link_2["speed"] = speed
-                    formatted_links[id_link_2] = f_link_2
+                if iface not in formatted_links[id_link]["source_interfaces"]:
+                    formatted_links[id_link]["source_interfaces"].append(iface)
+                if neigh_iface not in formatted_links[id_link]["target_interfaces"]:
+                    formatted_links[id_link]["target_interfaces"].append(neigh_iface)
+
+                # Since 1 (visual) link will aggregate multiple (actual) links
+                # we recalculate utilization/speed for the aggregated (visual) link
+                highest_uses[id_link] += highest_utilization
+                formatted_links[id_link]["speed"] = formatted_links[id_link]["speed"] + speed
+
+                highest_utilization = highest_uses[id_link]
+                speed = formatted_links[id_link]["speed"]
+                percent_highest = highest_utilization / speed * 100
+                if percent_highest > 100:
+                    print(device, iface, speed, highest_utilization, percent_highest)
+                    percent_highest = 0
+
+                formatted_links[id_link]["highest_utilization"] = percent_highest
+
+                # If we want to dissociate agg link into multilinks
+                # We have to handle "linknum"
+                # But for clarity on large topologies, this is commented out
+                #try:
+                #    f_link_2 = formatted_links[id_link].copy()
+                #    linknum = len(f_link_2["source_interfaces"])
+                #    id_link_2 = id_link + str(linknum)
+                #except KeyError:
+                #    f_link_2 = formatted_links[id_link_neigh].copy()
+                #    linknum = len(f_link_2["source_interfaces"])
+                #    id_link_2 = id_link_neigh + str(linknum)
+
+                #if linknum > 1:
+                #    f_link_2["linknum"] = linknum
+                #    f_link_2["highest_utilization"] = percent_highest
+                #    f_link_2["speed"] = speed
+                #    formatted_links[id_link_2] = f_link_2
 
         # logger.error(formatted_links)
         # logger.error(f'Format links End: {time() - start_format_timer}')
