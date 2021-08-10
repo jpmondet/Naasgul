@@ -1,13 +1,20 @@
 # /usr/bin/env python3
 
-from sys import exit as sexit
+from sys import exit as sexit, path as spath
 from os import getenv
-import re
+import os.path
+#import re
 from random import randint
 from time import time
 from argparse import ArgumentParser
 from pymongo import MongoClient, ASCENDING, UpdateMany  # type: ignore
 from pymongo.errors import DuplicateKeyError  # type: ignore
+
+spath.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
+from db_layer import ( # pylint:disable=import-error
+    prep_db_if_not_exist,
+    get_latest_utilization,
+)
 
 # https://pymongo.readthedocs.io/en/stable/tutorial.html
 
@@ -19,32 +26,6 @@ if not DB_STRING:
 client = MongoClient(DB_STRING)
 db = client.automapping
 
-
-def prep_db_if_not_exist():
-    """If db is empty, we create proper indexes."""
-
-    if (
-        list(db.nodes.find({}))
-        and list(db.links.find({}))
-        and list(db.stats.find({}))
-        and list(db.utilization.find({}))
-    ):
-        # Looks like everything is ready
-        return
-
-    print("Preping db since at least one collection is empty")
-
-    # We ensure that entries will be unique
-    # (this is a mongodb feature)
-    db.nodes.create_index([("device_name", 1)], unique=True)
-    db.links.create_index(
-        [("device_name", 1), ("iface_name", 1), ("neighbor_name", 1), ("neighbor_iface", 1)],
-        unique=True,
-    )
-    db.stats.create_index([("device_name", 1), ("iface_name", 1), ("timestamp", 1)], unique=True)
-    db.utilization.create_index([("device_name", 1), ("iface_name", 1)], unique=True)
-
-
 def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
 
     nodes_per_stages: int = int(number_nodes / fabric_stages)
@@ -55,8 +36,8 @@ def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
                 db.nodes.insert_one(
                     {
                         "device_name": f"fake_device_stage{str(stage+1)}_{str(stage_node+1)}",
-                        "group": stage + 1,
-                        "image": "router.png",
+                        #"group": stage + 1,
+                        #"image": "router.png",
                     }
                 )
             except DuplicateKeyError:
@@ -65,22 +46,30 @@ def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
                     {
                         "$set": {
                             "device_name": f"fake_device_stage{str(stage+1)}_{str(stage_node+1)}",
-                            "group": stage + 1,
-                            "image": "router.png",
+                            #"group": stage + 1,
+                            #"image": "router.png",
                         }
                     },
                 )
 
 
 def add_iface_utilization(device_name: str, iface_name: str, node_number: int):
+    previous_utilization, previous_timestamp = get_latest_utilization(device_name, iface_name)
+
+    last_utilization = node_number
+    if previous_timestamp > 0:
+        last_utilization = previous_utilization + (10000000 - previous_utilization) / 2
+
     db.utilization.update_one(
         {"device_name": f"{device_name}", "iface_name": f"{iface_name}"},
         {
             "$set": {
                 "device_name": f"{device_name}",
                 "iface_name": f"{iface_name}",
-                "prev_utilization": 0,
-                "last_utilization": node_number,
+                "prev_utilization": previous_utilization,
+                "prev_timestamp": previous_timestamp,
+                "timestamp": int(time()),
+                "last_utilization": last_utilization
             }
         },
         True,
@@ -92,6 +81,7 @@ def add_iface_stats(device_name: str, iface_name: str, node_number: int):
         {
             "device_name": f"{device_name}",
             "iface_name": f"{iface_name}",
+            "ifalias": f"{iface_name}",
             "timestamp": int(time()),
             "mtu": 1500,
             "mac": "",
