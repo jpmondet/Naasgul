@@ -29,7 +29,7 @@ db = client.automapping
 # db.stats.delete_many({})
 # db.utilization.delete_many({})
 
-# print("\n\n\n\nNODES")
+print("\n\n\n\nNODES")
 # print(db.nodes.find_one({"device_name": "test_static1"}))
 for node in db.nodes.find():
     print(node)
@@ -39,17 +39,17 @@ for node in db.nodes.find():
 # print(list(db.links.find({'device_name': 'test_static'})))
 # print(list(db.links.find({'device_name': 'test1'})))
 # print(list(db.links.find({'neighbor_name': 'test_static'})))
-for link in db.links.find():
-    print(link)
-print("\n\n\n\nSTATS")
+#for link in db.links.find():
+#    print(link)
+#print("\n\n\n\nSTATS")
 # db.stats.find({'device_name': 'fake_device_stage8_13', 'iface_name': '0/30'})
-for stat in db.stats.find():
-    print(stat)
-# print("\n\n\n\nUTILIZATION")
-# for utilization in db.utilization.find():
-#    print(utilization)
+#for stat in db.stats.find():
+#    print(stat)
+print("\n\n\n\nUTILIZATION")
+for utilization in db.utilization.find():
+   print(utilization)
 # print(list(db.links.find({'device_name': 'fake_device_stage6_16', 'iface_name': '0/16'})))
 # l = list(db.stats.find({'device_name': 'fake_device_stage6_16', 'iface_name': '0/16'}))
-l = list(db.stats.find({"device_name": "rtr3.iou", "iface_name": "0/0"}))
-print(l)
+#l = list(db.stats.find({"device_name": "rtr3.iou", "iface_name": "0/0"}))
+#print(l)
 # print(l[-1])

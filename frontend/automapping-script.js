@@ -1197,48 +1197,7 @@ d3.json(apiUrl + "/graph")
     //console.timeEnd('getGraph')
     //console.time('createLinksGraph')
 
-    //sort links by source, then target
     links = graph.links
-    //links.sort(function(a, b) {
-    //  if (a.source > b.source) {
-    //    return 1;
-    //  } else if (a.source < b.source) {
-    //    return -1;
-    //  } else {
-    //    if (a.target > b.target) {
-    //      return 1;
-    //    }
-    //    if (a.target < b.target) {
-    //      return -1;
-    //    } else {
-    //      return 0;
-    //    }
-    //  }
-    //});
-
-    //console.time('addLinkNums');
-    //////any links with duplicate source and target get an incremented 'linknum'
-    //linksExpanded = links.slice();
-    //for (var i = 0; i < links.length; i++) {
-    //  if (links[i].source_interfaces.length > 1) {
-    //    for (var j = 1; j < links[i].source_interfaces.length; j++) {
-    //      var link_to_add = {};
-    //      Object.assign(link_to_add, links[i]);
-    //      link_to_add.linknum = 1 + j;
-    //      linksExpanded.push(link_to_add);
-    //    }
-    //  //if (i != 0 &&
-    //  //  links[i].source == links[i - 1].source &&
-    //  //  links[i].target == links[i - 1].target) {
-    //  //  console.log(links[i]);
-    //  //  links[i].linknum = links[i - 1].linknum + 1;
-    //  }
-    //  linksExpanded[i].linknum = 1;
-    //};
-
-    //links = linksExpanded.slice();
-    //delete linksExpanded;
-    //console.timeEnd('addLinkNums');
 
     var link = svg.append("g")
       .attr("id","links-g")
@@ -1352,27 +1311,31 @@ d3.json(apiUrl + "/graph")
     function ticked() {
       link
         .attr("d", function(d) {
-          if (d.linknum === 1) {            
+          //if (d.linknum === 1) {            
             //link
             //  .attr("x1", function(d) { return d.source.x; })
             //  .attr("y1", function(d) { return d.source.y; })
             //  .attr("x2", function(d) { return d.target.x; })
             //  .attr("y2", function(d) { return d.target.y; });
             return "M" + d.source.x + "," + d.source.y + "L" + d.target.x + "," + d.target.y;
-          } else {
-            let dx = d.target.x - d.source.x,
-              dy = d.target.y - d.source.y,
-              t = Math.sqrt(dx * dx + dy * dy),
-              //half_n = Math.floor(links.length / 2) + links.length % 2,
-              half_n = Math.floor(d.source_interfaces.length / 2) + d.source_interfaces.length % 2,
-              //dr = d.linknum == half_n ? t * 100 : 2.25 * t * (half_n - Math.abs(d.linknum - half_n)) / d.source_interfaces.length,
-              drx = d.linknum <= half_n ? d.linknum * (t / d.source_interfaces.length) : (d.linknum + 1 - half_n) * (t / (d.source_interfaces.length)),
-              dry = d.linknum <= half_n ? d.linknum * (t / d.source_interfaces.length) : (d.linknum + 1 - half_n) * (t / (d.source_interfaces.length)),
-              //dr = d.linknum == half_n ? t * 100 : 10.25 * t * (half_n - Math.abs(d.linknum - half_n)) / links.length,
-              sweep = d.linknum <= half_n ? 1 : 0;
-              //console.log(d.linknum, half_n, drx, dry, sweep);
-            return "M" + d.source.x + "," + d.source.y + "A" + drx + "," + dry + " 0 0," + sweep + " " + d.target.x + "," + d.target.y;
-          }
+          //} else {
+          //  // Not used anymore for clarity
+          //  // Should come in the future in a better form : 
+          //  //     by clicking on an aggregated link, it disaggregate into multiple links (doable 
+          //  //     with d3 but pretty complex)
+          //  let dx = d.target.x - d.source.x,
+          //    dy = d.target.y - d.source.y,
+          //    t = Math.sqrt(dx * dx + dy * dy),
+          //    //half_n = Math.floor(links.length / 2) + links.length % 2,
+          //    half_n = Math.floor(d.source_interfaces.length / 2) + d.source_interfaces.length % 2,
+          //    //dr = d.linknum == half_n ? t * 100 : 2.25 * t * (half_n - Math.abs(d.linknum - half_n)) / d.source_interfaces.length,
+          //    drx = d.linknum <= half_n ? d.linknum * (t / d.source_interfaces.length) : (d.linknum + 1 - half_n) * (t / (d.source_interfaces.length)),
+          //    dry = d.linknum <= half_n ? d.linknum * (t / d.source_interfaces.length) : (d.linknum + 1 - half_n) * (t / (d.source_interfaces.length)),
+          //    //dr = d.linknum == half_n ? t * 100 : 10.25 * t * (half_n - Math.abs(d.linknum - half_n)) / links.length,
+          //    sweep = d.linknum <= half_n ? 1 : 0;
+          //    //console.log(d.linknum, half_n, drx, dry, sweep);
+          //  return "M" + d.source.x + "," + d.source.y + "A" + drx + "," + dry + " 0 0," + sweep + " " + d.target.x + "," + d.target.y;
+          //}
       });
 
       node
