@@ -279,17 +279,16 @@ def get_graph():
             id_link_neigh = neigh + device
 
             try:
-                speed = speeds[device + iface]
+                speed = speeds[device + iface] # "speed" in snmp terms is actually the max speed of the iface
                 speed = speed * 1000000  # Convert speed to bits
                 highest_utilization = utilizations[device + iface]
-                highest_utilization = highest_utilization * 8  # convert to bits
                 percent_highest = highest_utilization / speed * 100
                 if percent_highest > 100:
                     print(device, iface, speed, highest_utilization, percent_highest)
                     percent_highest = 0
             except KeyError:
                 speed = 1000000  # Can't determine speed
-                highest_utilization = 0  # Can't determine speed
+                highest_utilization = 0  # Can't determine utilization
                 percent_highest = 0
                 #logger.error(f"Cant find speed for {device+iface} in {speeds}")
 
@@ -428,7 +427,7 @@ def stats(devices: List[str] = Query(None)):
                     stats_by_device[dname][ifname]["stats"].append(stat_formatted)
 
                 prev_inbits = inbits
-                prev_outbits = outbis
+                prev_outbits = outbits
 
             global CACHE, CACHED_TIMEOUT
             CACHE[f"stats_by_device_{devices}"] = stats_by_device
