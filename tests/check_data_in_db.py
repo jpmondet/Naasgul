@@ -42,12 +42,12 @@ for node in db.nodes.find():
 #for link in db.links.find():
 #    print(link)
 #print("\n\n\n\nSTATS")
-# db.stats.find({'device_name': 'fake_device_stage8_13', 'iface_name': '0/30'})
+print(list(db.stats.find({'device_name': 'fake_device_stage1_1', 'iface_name': '1/1'})))
 #for stat in db.stats.find():
 #    print(stat)
-print("\n\n\n\nUTILIZATION")
-for utilization in db.utilization.find():
-   print(utilization)
+#print("\n\n\n\nUTILIZATION")
+#for utilization in db.utilization.find():
+#   print(utilization)
 # print(list(db.links.find({'device_name': 'fake_device_stage6_16', 'iface_name': '0/16'})))
 # l = list(db.stats.find({'device_name': 'fake_device_stage6_16', 'iface_name': '0/16'}))
 #l = list(db.stats.find({"device_name": "rtr3.iou", "iface_name": "0/0"}))

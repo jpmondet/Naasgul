@@ -53,12 +53,11 @@ def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
                 )
 
 
-def add_iface_utilization(device_name: str, iface_name: str, iface_bytes: int):
-    previous_utilization, previous_timestamp = get_latest_utilization(device_name, iface_name)
+def add_iface_utilization(device_name: str, iface_name: str, iface_bytes: int, previous_utilization: int, previous_timestamp: int):
 
     last_utilization = iface_bytes * 8
     if previous_timestamp > 0:
-        last_utilization = previous_utilization + randint(0, 10000000)
+        last_utilization = previous_utilization + last_utilization
 
     db.utilization.update_one(
         {"device_name": f"{device_name}", "iface_name": f"{iface_name}"},
@@ -76,8 +75,7 @@ def add_iface_utilization(device_name: str, iface_name: str, iface_bytes: int):
     )
 
 
-def add_iface_stats(device_name: str, iface_name: str, iface_bytes: int):
-    previous_utilization, _ = get_latest_utilization(device_name, iface_name)
+def add_iface_stats(device_name: str, iface_name: str, iface_bytes: int, previous_utilization: int):
     previous_utilization = int(previous_utilization / 8)
     db.stats.insert_one(
         {
@@ -142,13 +140,14 @@ def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = 
                     )
 
                 iface_bytes: int = randint(0, 1250000)
+                previous_utilization, previous_timestamp = get_latest_utilization(up_device, down_iface)
 
                 print(up_device, down_iface, down_device, up_iface, iface_bytes, number_nodes)
-                add_iface_stats(up_device, down_iface, iface_bytes)
-                add_iface_utilization(up_device, down_iface, iface_bytes)
+                add_iface_stats(up_device, down_iface, iface_bytes, previous_utilization)
+                add_iface_utilization(up_device, down_iface, iface_bytes, previous_utilization, previous_timestamp)
 
-                add_iface_stats(down_device, up_iface, iface_bytes)
-                add_iface_utilization(down_device, up_iface, iface_bytes)
+                add_iface_stats(down_device, up_iface, iface_bytes, previous_utilization)
+                add_iface_utilization(down_device, up_iface, iface_bytes, previous_utilization, previous_timestamp)
 
 
 def add_links_not_generic():
