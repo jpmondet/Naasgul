@@ -175,6 +175,14 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
     regex_pattern = re.compile("^([a-z]{2})([0-9]+).*", re.IGNORECASE)
     matched = regex_pattern.match(node_name)
     if not matched:
+        # It may be a "fake" node with a "fake" name:
+        regex_pattern = re.compile("^fake_device_stage([0-9]+)_([0-9]+)$", re.IGNORECASE)
+        matched = regex_pattern.match(node_name)
+        if matched:
+            # matched.group(2) could be used but it doesn't make sense right now since
+            # d3.js 'force' handle it for those test devices which are at the 'same localisation'
+            return (matched.group(1), 1)
+        # Unknown device, we push it to the right end of the graph
         return (7, 1)
     device_function = matched.group(1)
     device_localisation = matched.group(2)
@@ -242,7 +250,7 @@ def get_graph():
     groups: Dict[str, int] = {}
 
     for node in nodes:
-        if not node.get("groupx") or not node.get("image"):
+        if not node.get("groupx") or not node.get("groupy"): # or not node.get("image"):
             node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
 
         node["id"] = node["device_name"]
