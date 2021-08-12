@@ -137,6 +137,62 @@ async def get_device_lldp_infos(target_name, oids, credentials, target_ip=None, 
         print(err, "\n (can't access to devices?) Passing for now...")
 
 
+def lldp_scrapping(snmp_credentials, init_node_fqdn: str):
+    scrapped: List[Dict[str, str]] = get_all_nodes()
+    devices: List[Tuple[str, str, int]] = []
+    for dev in scrapped:
+        if "fake" in dev["device_name"]:
+            continue
+        devices.append((dev["device_name"], '', 161))
+
+    if not devices:
+        if INIT_NODE_FQDN:
+            device = (INIT_NODE_FQDN, INIT_NODE_IP, int(INIT_NODE_PORT))
+        elif INIT_NODE_IP:
+            device = (INIT_NODE_IP, INIT_NODE_IP, int(INIT_NODE_PORT))
+        else:
+            if init_node_fqdn:
+                # This is a pytest case
+                device = (init_node_fqdn, '', 1161)
+            else:
+                # Ok we certainly have fake datas
+                device = ("fake_local_device", "127.0.0.1", 1161)
+        devices.append(device)
+
+    if STOP_NODES_FQDN:
+        stop_fqdns = STOP_NODES_FQDN.split(",")
+        for node in stop_fqdns:
+            node_tuple = (node, '', 161)
+            if node_tuple in devices:
+                devices.remove(node_tuple)
+    if STOP_NODES_IP:
+        stop_ips = STOP_NODES_IP.split(",")
+        for node in stop_ips:
+            node_tuple = (node, node, 161)
+            if node_tuple in devices:
+                devices.remove(node_tuple)
+
+    print(devices)
+
+    for devices_to_scrap in split_list(devices, int(NB_THREADS)):
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            asyncio.wait(
+                [
+                    get_device_lldp_infos(
+                        hostname, NEEDED_MIBS.values(), snmp_credentials, target_ip=ip, port=port
+                    )
+                    for hostname, ip, port in devices_to_scrap
+                ]
+            )
+        )
+
+    # sleep(300)
+    if not init_node_fqdn:
+        sleep(int(60 * (len(devices) / int(NB_THREADS))) + 30)
+
+
 def main():
 
     creds = get_snmp_creds(SNMP_USR, SNMP_AUTH_PWD, SNMP_PRIV_PWD)
@@ -144,52 +200,7 @@ def main():
     prep_db_if_not_exist()
 
     while True:
-        scrapped: List[Dict[str, str]] = get_all_nodes()
-        devices: List[Tuple[str, str]] = []
-        for device in scrapped:
-            if "fake" in device["device_name"]:
-                continue
-            devices.append((device["device_name"], None, 161))
-
-        if not devices:
-            if INIT_NODE_FQDN:
-                device = (INIT_NODE_FQDN, INIT_NODE_IP, int(INIT_NODE_PORT))
-            elif INIT_NODE_IP:
-                device = (INIT_NODE_IP, INIT_NODE_IP, int(INIT_NODE_PORT))
-            else:
-                # This is a test case
-                device = ("fake_local_device", "127.0.0.1", 1161)
-            devices.append(device)
-
-        if STOP_NODES_FQDN:
-            stop_fqdns = STOP_NODES_FQDN.split(",")
-            for node in stop_fqdns:
-                if node in devices:
-                    devices.remove(node)
-        if STOP_NODES_IP:
-            stop_ips = STOP_NODES_IP.split(",")
-            for node in stop_ips:
-                if node in devices:
-                    devices.remove(node)
-
-        print(devices)
-
-        for devices_to_scrap in split_list(devices, int(NB_THREADS)):
-
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(
-                asyncio.wait(
-                    [
-                        get_device_lldp_infos(
-                            hostname, NEEDED_MIBS.values(), creds, target_ip=ip, port=port
-                        )
-                        for hostname, ip, port in devices_to_scrap
-                    ]
-                )
-            )
-
-        # sleep(300)
-        sleep(int(60 * (len(devices) / int(NB_THREADS))) + 30)
+        lldp_scrapping(creds)
 
 
 if __name__ == "__main__":
