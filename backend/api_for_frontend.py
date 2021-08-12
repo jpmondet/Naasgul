@@ -15,6 +15,7 @@
 
 import logging
 import re
+from os import getenv
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from collections import defaultdict
@@ -61,8 +62,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_USER: str = "user"
-API_PASS: str = "pass"
+API_USER: str = getenv("API_USER", "user")
+API_PASS: str = getenv("API_PASS", "pass")
 
 security = HTTPBasic()  # TODO: Needs better security
 
