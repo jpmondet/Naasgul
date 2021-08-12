@@ -101,6 +101,13 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
             "neighbor_iface": neigh_iface,
         }
 
+
+        if not dev_name or not dev_iface or not neigh_name or not neigh_iface:
+            # Ensure that all values are defined
+            # Else we don't add this link
+            print(f"WARNING: Link not added : {query_link}")
+            continue
+
         links_list.append((query_link, query_link))
 
         query_neigh_link = {

@@ -284,6 +284,11 @@ def get_graph():
             iface = str(link["iface_name"])
             neigh = link["neighbor_name"]
             neigh_iface = str(link["neighbor_iface"])
+            if not device or not iface or not neigh or not neigh_iface:
+                # Discard possible null ifaces
+                logger.error(f"WARNING: Link discarded : {link}")
+                continue
+
 
             id_link = device + neigh
             id_link_neigh = neigh + device
