@@ -17,25 +17,22 @@ from db_layer import (
     get_stats_devices,
     UTILIZATION_COLLECTION,
     get_latest_utilization,
+    add_node,
+    NODES_COLLECTION,
+    MDDPK
 )
 
+def test_db_prep():
+    """Testing if cuniqueness onstraints are correctly applied"""
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+    add_node("test_duplicate")
+    with pytest.raises(MDDPK):
+        NODES_COLLECTION.insert_one({"device_name": "test_duplicate"})
 
 delete_all_collections_datas()
 prep_db_if_not_exist()
 add_fake_datas(12, 5)
-
-TEST_GRAPH_DATA = {}
-with open("tests/graph_datas.json") as graph_datas:
-    TEST_GRAPH_DATA = json.load(graph_datas)
-
-TEST_STATS_DATA = {}
-with open("tests/stats_datas.json") as stats_datas:
-    TEST_STATS_DATA = json.load(stats_datas)
-
-TEST_NEIGHS_DATA = {}
-with open("tests/neighs_datas.json") as neighs_datas:
-    TEST_NEIGHS_DATA = json.load(neighs_datas)
-
 
 def test_get_latest_utilization():
     latest, timestamp = get_latest_utilization("fake_device_stage1_1", "1/1")
