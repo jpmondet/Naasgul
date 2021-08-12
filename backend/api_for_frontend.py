@@ -78,7 +78,9 @@ class Node(BaseModel):
 
     name: str
     addr: Optional[str] = None
-    group: Optional[int] = 10  # Group of the node
+    groupx: Optional[int] = 11  # Group (function) of the node
+    groupy: Optional[int] = 11  # Group (localisation) of the node
+    image: Optional[str] = "router.png"
     # (Number that drives its placement on the graph. 0 is on the left,
     # 10 (or even more) on the right)
     ifaces: Optional[List[str]] = None
@@ -140,7 +142,7 @@ def background_time_update():
 
 def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> None:
 
-    add_node(node.name, node.group)  # type: ignore
+    add_node(node.name, node.groupx, node.groupy, node.image)  # type: ignore
 
     if neigh_infos:
         for neigh in neigh_infos:
@@ -250,7 +252,7 @@ def get_graph():
     groups: Dict[str, int] = {}
 
     for node in nodes:
-        if not node.get("groupx") or not node.get("groupy"): # or not node.get("image"):
+        if not node.get("groupx") or not node.get("groupy") or (node["groupx"] == 11 and node["groupy"] == 11):
             node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
 
         node["id"] = node["device_name"]

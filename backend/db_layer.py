@@ -153,13 +153,13 @@ def add_iface_stats(stats: List[Dict[str, Any]]) -> None:
     STATS_COLLECTION.insert_many(stats)
 
 
-def add_node(node_name: str, group: int, image: str = "router.png") -> None:
+def add_node(node_name: str, groupx: int = 11, groupy: int = 11, image: str = "router.png") -> None:
     try:
-        NODES_COLLECTION.insert_one({"device_name": node_name, "group": group, "image": image})
+        NODES_COLLECTION.insert_one({"device_name": node_name, "groupx": groupx, "groupy": groupy, "image": image})
     except MDDPK:
         NODES_COLLECTION.update_many(
             {"device_name": node_name},
-            {"$set": {"device_name": node_name, "group": group, "image": image}},
+            {"$set": {"device_name": node_name, "groupx": groupx, "groupy": groupy, "image": image}},
         )
 
 
