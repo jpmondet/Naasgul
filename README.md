@@ -52,5 +52,6 @@ Simply run `./scripts/ci_tests.sh` and it should run.
 
 ## Generate coverage badge
 
-After `pytest` run with `--cov=backend/`, we get a `.coverage` file.  
+After running `pytest` with `--cov=backend/` (remember that a mongodb & a snmpsim must be running -> Gitlab-ci takes care of everything), we get a `.coverage` file.
+
 From there, we can just `coverage-badge -o resources/coverage.svg`
