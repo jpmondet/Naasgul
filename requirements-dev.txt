@@ -8,4 +8,5 @@ mypy
 bandit
 scalene
 nodeenv
+coverage-badge
 -r backend/requirements.txt

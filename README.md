@@ -1,12 +1,14 @@
 # Naasgul: Network as a Graph using lldp
 (and snmp for now ;-) )
 
+![coverage](https://github.com/jpmondet/Naasgul/raw/master/resources/coverage.svg)
+
 # /!\ [Work in Progress] /!\
 
 The goal here is to have an automated replacement to weathermap.  
 That means that this project aims to output a map of the network topology and regularly poll the devices to show the links utilization.
 
-![alt text](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_fabric_with_used_links.png "Sample fabric with used links")
+![Sample fabric with used links](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_fabric_with_used_links.png)
 
 (Was greatly inspired by a similar PoC project from `zerxen` at first)
 
@@ -36,14 +38,19 @@ If you want to add more stats to interfaces, you can add the flag `-a 1` (so int
 
 By throwing some `-a 1`, it should get you something like this :
 
-![alt text](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_5_stages_fabric.png "Sample 5-stage fabric")
+![Sample 5-stage fabric](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_5_stages_fabric.png)
 
 With graphs like :
 
-![alt text](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_iface_graph.png "Sample iface graph")
+![Sample iface graph](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_iface_graph.png)
 
 ## Play gitlab-ci locally
 
 `ci_tests.sh` allows to play Gitlab-ci jobs locally for development purposes.
 
 Simply run `./scripts/ci_tests.sh` and it should run.
+
+## Generate coverage badge
+
+After `pytest` run with `--cov=backend/`, we get a `.coverage` file.  
+From there, we can just `coverage-badge -o resources/coverage.svg`
