@@ -171,7 +171,8 @@ def main():
                         ]
                     )
                 )
-            sleep(int(60 * (len(devices) / int(NB_THREADS))))
+                #sleep(10)
+            sleep(int(60 + (len(devices) / int(NB_THREADS))))
         else:
             print("No devices retrieved from db... Waiting till there are any.")
             sleep(60)
