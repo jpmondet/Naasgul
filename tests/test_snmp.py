@@ -19,13 +19,13 @@ from snmp_functions import (
 from snmp_get_lldp_topo import get_device_lldp_infos
 from snmp_get_ifaces_stats import get_stats_and_dump
 
+SNMP_NODE_TO_RETRIEVE: str = os.getenv("SNMP_NODE_TO_RETRIEVE", "127.0.0.1")
 
 def test_getting_lldp_infos():
 
-    node_to_retrieve: str = "snmpsim"
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait(
-    [ get_device_lldp_infos(node_to_retrieve,
+    [ get_device_lldp_infos(SNMP_NODE_TO_RETRIEVE,
         NEEDED_MIBS_FOR_LLDP.values(),
         get_snmp_creds(snmp_user='lldp'), 
         port=1161)
@@ -33,22 +33,21 @@ def test_getting_lldp_infos():
 
     nodes = list(get_all_nodes())
 
-    assert nodes[0]["device_name"] == node_to_retrieve
+    assert nodes[0]["device_name"] == SNMP_NODE_TO_RETRIEVE
 
 def test_getting_iface_stats():
 
-    node_to_retrieve: str = "127.0.0.1"
     iface_to_retrieve: str = "1/1"
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait(
-    [ get_stats_and_dump('127.0.0.1',
+    [ get_stats_and_dump(SNMP_NODE_TO_RETRIEVE,
         NEEDED_MIBS_FOR_STATS.values(),
         get_snmp_creds(snmp_user='ifmib'), 
         IFACES_TABLE_TO_COUNT,
-        '127.0.0.1', 1161)
+        SNMP_NODE_TO_RETRIEVE, 1161)
     ]))
 
-    stats = list(get_stats_devices([node_to_retrieve]))
+    stats = list(get_stats_devices([SNMP_NODE_TO_RETRIEVE]))
 
     assert len(stats) == 8
