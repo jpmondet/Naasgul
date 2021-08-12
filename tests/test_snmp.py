@@ -22,13 +22,13 @@ from snmp_get_ifaces_stats import get_stats_and_dump
 
 def test_getting_lldp_infos():
 
-    node_to_retrieve: str = "127.0.0.1"
+    node_to_retrieve: str = "snmpsim"
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait(
-    [ get_device_lldp_infos('127.0.0.1',
+    [ get_device_lldp_infos(node_to_retrieve,
         NEEDED_MIBS_FOR_LLDP.values(),
         get_snmp_creds(snmp_user='lldp'), 
-        '127.0.0.1', 1161)
+        port=1161)
     ]))
 
     nodes = list(get_all_nodes())

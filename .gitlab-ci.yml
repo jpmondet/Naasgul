@@ -28,6 +28,8 @@ pytest:
   services:
     - name: mongo:4.4.3-bionic
       alias: mongodb
+    - name: jpmondet/snmpsim:1.0.1
+      alias: snmpsim
   script:
     - pip install -r requirements-dev.txt
     - pytest --cov=backend -s tests/ --junitxml=report.xml

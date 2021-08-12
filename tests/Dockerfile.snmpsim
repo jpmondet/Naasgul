@@ -1,0 +1,15 @@
+FROM python:3.9.6-slim-buster
+
+COPY snmpsim.zip /app/
+COPY snmp_datas /app/snmp_datas
+
+WORKDIR /app
+
+RUN useradd -ms /bin/bash snmpsim \
+  && pip install ./snmpsim.zip
+
+USER snmpsim
+
+EXPOSE 1161/udp
+
+CMD ["snmpsim-command-responder", "--data-dir=./snmp_datas", "--agent-udpv4-endpoint=0.0.0.0:1161"]

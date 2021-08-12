@@ -2,7 +2,6 @@ pylint
 pytest
 pytest-cov
 pytest-mock
-./resources/snmpsim.zip
 black
 mypy
 bandit
