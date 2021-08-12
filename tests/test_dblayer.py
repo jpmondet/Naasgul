@@ -11,6 +11,8 @@ from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
 from db_layer import (
     prep_db_if_not_exist,
+    get_all_nodes,
+    get_all_links,
     get_latest_utilization,
     add_iface_stats,
     bulk_update_collection,
@@ -18,21 +20,56 @@ from db_layer import (
     UTILIZATION_COLLECTION,
     get_latest_utilization,
     add_node,
+    add_link,
     NODES_COLLECTION,
     MDDPK
 )
 
 def test_db_prep():
-    """Testing if cuniqueness onstraints are correctly applied"""
+    """Testing if cuniqueness onstraints are correctly applied on db preparation"""
     delete_all_collections_datas()
     prep_db_if_not_exist()
-    add_node("test_duplicate")
+    node_name: str = "test_duplicate"
+    add_node(node_name)
     with pytest.raises(MDDPK):
-        NODES_COLLECTION.insert_one({"device_name": "test_duplicate"})
+        NODES_COLLECTION.insert_one({"device_name": node_name})
 
-delete_all_collections_datas()
-prep_db_if_not_exist()
-add_fake_datas(12, 5)
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+
+def test_get_all_nodes():
+    node_name: str = "test_node"
+    add_node(node_name)
+    nodes = list(get_all_nodes())
+
+    assert len(nodes) == 1
+    assert nodes[0]["device_name"] == node_name
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+def test_get_all_links():
+    node_name: str = "test_node"
+    neigh_name: str = "test_neigh"
+    iface_name: str = "e1/1"
+    neigh_iface_name: str = "e2/1"
+    add_link(node_name, neigh_name, iface_name, neigh_iface_name)
+
+    links = list(get_all_links())
+
+    assert len(links) == 1
+    del links[0]["_id"]
+    assert links[0] == {
+                "device_name": node_name,
+                "neighbor_name": neigh_name,
+                "iface_name": iface_name,
+                "neighbor_iface": neigh_iface_name,
+            }
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
 
 def test_get_latest_utilization():
     latest, timestamp = get_latest_utilization("fake_device_stage1_1", "1/1")
