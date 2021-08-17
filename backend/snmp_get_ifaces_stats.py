@@ -135,6 +135,45 @@ async def get_stats_and_dump(target_name, oids, credentials, count_oid, target_i
     except (RuntimeError, PySnmpError) as err:
         print(err, "\n (can't access to devices?) Passing for now...")
 
+def stats_scrapping(snmp_credentials, init_node_fqdn: str = ''):
+    scrapped: List[Dict[str, str]] = get_all_nodes()
+    devices: List[Tuple[str, str, int]] = []
+    if init_node_fqdn:
+        # This is a pytest case
+        devices.append((init_node_fqdn, '', 1161))
+    for device in scrapped:
+        if "fake" in device["device_name"]:
+            continue
+        devices.append((device["device_name"], '', 161))
+
+    if TEST_CASE:
+        devices.append(("fake_local_device", "127.0.0.1", 1161))
+
+    if devices:
+        for devices_to_scrap in split_list(devices, int(NB_THREADS)):
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(
+                asyncio.wait(
+                    [
+                        get_stats_and_dump(
+                            hostname,
+                            NEEDED_MIBS.values(),
+                            snmp_credentials,
+                            IFACES_TABLE_TO_COUNT,
+                            target_ip=ip,
+                            port=port,
+                        )
+                        for hostname, ip, port in devices_to_scrap
+                    ]
+                )
+            )
+            #sleep(10)
+        if not init_node_fqdn:
+            sleep(int(60 + (len(devices) / int(NB_THREADS))))
+    else:
+        print("No devices retrieved from db... Waiting till there are any.")
+        sleep(60)
+
 
 def main():
 
@@ -143,40 +182,7 @@ def main():
     prep_db_if_not_exist()
 
     while True:
-        scrapped: List[Dict[str, str]] = get_all_nodes()
-        devices: List[Tuple[str, str]] = []
-        for device in scrapped:
-            if "fake" in device["device_name"]:
-                continue
-            devices.append((device["device_name"], None, 161))
-
-        if TEST_CASE:
-            devices.append(("fake_local_device", "127.0.0.1", 1161))
-
-        if devices:
-            for devices_to_scrap in split_list(devices, int(NB_THREADS)):
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(
-                    asyncio.wait(
-                        [
-                            get_stats_and_dump(
-                                hostname,
-                                NEEDED_MIBS.values(),
-                                creds,
-                                IFACES_TABLE_TO_COUNT,
-                                target_ip=ip,
-                                port=port,
-                            )
-                            for hostname, ip, port in devices_to_scrap
-                        ]
-                    )
-                )
-                #sleep(10)
-            sleep(int(60 + (len(devices) / int(NB_THREADS))))
-        else:
-            print("No devices retrieved from db... Waiting till there are any.")
-            sleep(60)
-
+        stats_scrapping(creds)
 
 
 if __name__ == "__main__":

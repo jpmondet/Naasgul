@@ -137,7 +137,7 @@ async def get_device_lldp_infos(target_name, oids, credentials, target_ip=None, 
         print(err, "\n (can't access to devices?) Passing for now...")
 
 
-def lldp_scrapping(snmp_credentials, init_node_fqdn: str):
+def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ''):
     scrapped: List[Dict[str, str]] = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
     for dev in scrapped:
