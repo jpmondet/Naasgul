@@ -2,7 +2,7 @@
 
 runner_running=$(docker ps | grep -i gitlab-runner)
 
-ci_jobs="black pylint pytest build_api build_toposcrapper build_statscrapper build_frontend"
+ci_jobs="black pylint mypy bandit pytest build_api build_toposcrapper build_statscrapper build_frontend"
 
 if [ -z "$runner_running" ]
 then

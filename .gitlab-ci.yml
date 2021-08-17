@@ -13,15 +13,29 @@ black:
   stage: tests
   image: python:3.9.6-slim-buster
   script:
-    - pip install -r requirements-dev.txt
+    - pip install black
     - black -l 100 -t py38 --check backend/ tests/ scripts/
 
 pylint:
   stage: tests
   image: python:3.9.6-slim-buster
   script:
-    - pip install -r requirements-dev.txt
+    - pip install pylint
     - pylint backend/ tests/ scripts/
+
+mypy:
+  stage: tests
+  image: python:3.9.6-slim-buster
+  script:
+    - pip install mypy
+    - mypy backend/ tests/ scripts/
+
+bandit:
+  stage: tests
+  image: python:3.9.6-slim-buster
+  script:
+    - pip install bandit
+    - bandit backend/ tests/ scripts/
 
 pytest:
   stage: tests
@@ -45,7 +59,6 @@ build_api:
   variables:
     service_to_build: api
   script:
-    - ls -alh
     - docker build -f backend/Dockerfile.${service_to_build} backend/ -t ${PROJ_NAME}_${service_to_build}:${CI_COMMIT_BRANCH}
 
 build_toposcrapper:
