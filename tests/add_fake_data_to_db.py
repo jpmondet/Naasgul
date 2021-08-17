@@ -1,3 +1,5 @@
+"""Quick scripts that helps adding fake datas into
+db for tests purposes"""
 # /usr/bin/env python3
 
 from sys import exit as sexit, path as spath
@@ -8,27 +10,23 @@ import os.path
 from random import randint
 from time import time
 from argparse import ArgumentParser
-from pymongo import MongoClient, ASCENDING, UpdateMany  # type: ignore
+from pymongo import MongoClient  # type: ignore
 from pymongo.errors import DuplicateKeyError  # type: ignore
 
 spath.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
-from db_layer import (  # pylint:disable=import-error
+# pylint:disable=import-error, wrong-import-position
+from db_layer import ( # type: ignore
     prep_db_if_not_exist,
     get_latest_utilization,
 )
 
-# https://pymongo.readthedocs.io/en/stable/tutorial.html
-
-DB_STRING = getenv("DB_STRING")
-if not DB_STRING:
-    DB_STRING = "mongodb://localhost:27017/"
-    # DB_STRING = "mongodb://mongodb:27017/"
-
+DB_STRING: str = getenv("DB_STRING", "mongodb://localhost:27017/")
 client = MongoClient(DB_STRING)
 db = client.automapping
 
-
-def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
+def add_lots_of_nodes(number_nodes: int, fabric_stages: int) -> None:
+    """Inserts or Updates number_nodes devices into db
+    (nodes collection)"""
 
     nodes_per_stages: int = int(number_nodes / fabric_stages)
 
@@ -61,9 +59,11 @@ def add_iface_utilization(
     iface_bytes: int,
     previous_utilization: int,
     previous_timestamp: int,
-):
+) -> None:
+    """Inserts fake iface utilization of a specific
+    interface into db (utilization collection)"""
 
-    last_utilization = iface_bytes * 8
+    last_utilization: int = iface_bytes * 8
     if previous_timestamp > 0:
         last_utilization = previous_utilization + last_utilization
 
@@ -83,7 +83,15 @@ def add_iface_utilization(
     )
 
 
-def add_iface_stats(device_name: str, iface_name: str, iface_bytes: int, previous_utilization: int):
+def add_iface_stats(
+    device_name: str,
+    iface_name: str,
+    iface_bytes: int,
+    previous_utilization: int
+) -> None:
+    """Inserts fake iface stats to a specific
+    interface into db (stats collection)"""
+
     previous_utilization = int(previous_utilization / 8)
     db.stats.insert_one(
         {
@@ -109,10 +117,11 @@ def add_iface_stats(device_name: str, iface_name: str, iface_bytes: int, previou
         }
     )
 
-
+# pylint: disable=too-many-locals
 def add_lots_of_links(
     number_nodes: int, fabric_stages: int, stats_only: bool = False, random_bytes: bool = True
-):
+) -> None :
+    """Calculates and adds all the links needed so the topo looks like a fabric"""
 
     node_number: int = 0
 
@@ -171,194 +180,12 @@ def add_lots_of_links(
 
             node_number += node_increment
 
-
-def add_links_not_generic():
-    for i in range(4):
-        for j in range(10):
-            # Connects rtr.iou devices with first 10 'fake_devices'
-            db.links.insert_one(
-                {
-                    "device_name": f"rtr{str(i+1)}.iou",
-                    "iface_name": f"100/{str(j)}",
-                    "neighbor_iface": "0/0",
-                    "neighbor_name": f"fake_device{str(j)}",
-                }
-            )
-            db.links.insert_one(
-                {
-                    "device_name": f"fake_device{str(j)}",
-                    "iface_name": "0/0",
-                    "neighbor_iface": f"100/{str(j)}",
-                    "neighbor_name": f"rtr{str(i+1)}.iou",
-                }
-            )
-    for i in range(10):
-        for j in range(10):
-            # Connects first 10 'fake_devices' with 10 more down_fake_devices each
-            down_device = str((i + 1) * 10 + j)
-            db.links.insert_one(
-                {
-                    "device_name": f"fake_device{str(i)}",
-                    "iface_name": f"1/{down_device}",
-                    "neighbor_iface": "0/0",
-                    "neighbor_name": f"down_fake_device{down_device}",
-                }
-            )
-            db.links.insert_one(
-                {
-                    "device_name": f"down_fake_device{down_device}",
-                    "iface_name": "0/0",
-                    "neighbor_iface": f"1/{down_device}",
-                    "neighbor_name": f"fake_device{str(i)}",
-                }
-            )
-
-
-def add_lots_of_utilizations(number_nodes: int, fabric_stages: int):
-    pass
-
-
-def add_utilizations_not_generic():
-    for i in range(4):
-        for j in range(10):
-            db.utilization.insert_one(
-                {
-                    "device_name": f"rtr{str(i+1)}.iou",
-                    "iface_name": f"100/{str(j)}",
-                    "last_utilization": randint(0, 1250000),
-                }
-            )
-            db.utilization.insert_one(
-                {
-                    "device_name": f"fake_device{str(j)}",
-                    "iface_name": f"0/0",
-                    "prev_utilization": randint(0, 1250000),
-                    "last_utilization": randint(0, 1250000),
-                }
-            )
-    for i in range(10):
-        for j in range(10):
-            down_device = str((i + 1) * 10 + j)
-            db.utilization.insert_one(
-                {
-                    "device_name": f"fake_device{str(i)}",
-                    "iface_name": f"1/{down_device}",
-                    "last_utilization": randint(0, 1250000),
-                }
-            )
-            db.utilization.insert_one(
-                {
-                    "device_name": f"down_fake_device{down_device}",
-                    "iface_name": f"0/0",
-                    "prev_utilization": randint(0, 1250000),
-                    "last_utilization": randint(0, 1250000),
-                }
-            )
-
-
-def add_lots_of_stats(number_nodes: int, fabric_stages: int):
-    pass
-
-
-def add_stats_not_generic():
-    for i in range(4):
-        for j in range(10):
-            db.stats.insert_one(
-                {
-                    "device_name": f"rtr{str(i+1)}.iou",
-                    "iface_name": f"100/{str(j)}",
-                    "timestamp": int(time()),
-                    "mtu": 1500,
-                    "mac": "",
-                    "speed": 10,
-                    "in_discards": 0,
-                    "in_errors": 0,
-                    "out_discards": 0,
-                    "out_errors": 0,
-                    "in_bytes": randint(0, 1250000),
-                    "in_ucast_pkts": 0,
-                    "in_mcast_pkts": 0,
-                    "in_bcast_pkts": 0,
-                    "out_bytes": randint(0, 1250000),
-                    "out_ucast_pkts": 0,
-                    "out_mcast_pkts": 0,
-                    "out_bcast_pkts": 0,
-                }
-            )
-            db.stats.insert_one(
-                {
-                    "device_name": f"fake_device{str(j)}",
-                    "iface_name": f"0/0",
-                    "timestamp": int(time()),
-                    "mtu": 1500,
-                    "mac": "",
-                    "speed": 10,
-                    "in_discards": 0,
-                    "in_errors": 0,
-                    "out_discards": 0,
-                    "out_errors": 0,
-                    "in_bytes": randint(0, 1250000),
-                    "in_ucast_pkts": 0,
-                    "in_mcast_pkts": 0,
-                    "in_bcast_pkts": 0,
-                    "out_bytes": randint(0, 1250000),
-                    "out_ucast_pkts": 0,
-                    "out_mcast_pkts": 0,
-                    "out_bcast_pkts": 0,
-                }
-            )
-    for i in range(10):
-        for j in range(10):
-            down_device = str((i + 1) * 10 + j)
-            db.stats.insert_one(
-                {
-                    "device_name": f"fake_device{str(i)}",
-                    "iface_name": f"1/{down_device}",
-                    "timestamp": int(time()),
-                    "mtu": 1500,
-                    "mac": "",
-                    "speed": 10,
-                    "in_discards": 0,
-                    "in_errors": 0,
-                    "out_discards": 0,
-                    "out_errors": 0,
-                    "in_bytes": randint(0, 1250000),
-                    "in_ucast_pkts": 0,
-                    "in_mcast_pkts": 0,
-                    "in_bcast_pkts": 0,
-                    "out_bytes": randint(0, 1250000),
-                    "out_ucast_pkts": 0,
-                    "out_mcast_pkts": 0,
-                    "out_bcast_pkts": 0,
-                }
-            )
-            db.stats.insert_one(
-                {
-                    "device_name": f"down_fake_device{down_device}",
-                    "iface_name": f"0/0",
-                    "timestamp": int(time()),
-                    "mtu": 1500,
-                    "mac": "",
-                    "speed": 10,
-                    "in_discards": 0,
-                    "in_errors": 0,
-                    "out_discards": 0,
-                    "out_errors": 0,
-                    "in_bytes": randint(0, 1250000),
-                    "in_ucast_pkts": 0,
-                    "in_mcast_pkts": 0,
-                    "in_bcast_pkts": 0,
-                    "out_bytes": randint(0, 1250000),
-                    "out_ucast_pkts": 0,
-                    "out_mcast_pkts": 0,
-                    "out_bcast_pkts": 0,
-                }
-            )
-
-
 def add_fake_datas(
     nb_nodes: int, fabric_stages: int, add_stats_only: bool = False, random_bytes: bool = True
-):
+) -> None:
+    """Determine the number of stages the fabric should have and calls
+    the right functions depending on if user wants to create everything or
+    just add stats to an already existing fake fabric"""
 
     fabric_stages = 1 if fabric_stages == 1 else int(fabric_stages / 2 + 1)
 
@@ -367,14 +194,16 @@ def add_fake_datas(
     add_lots_of_links(nb_nodes, fabric_stages, add_stats_only, random_bytes)
 
 
-def delete_all_collections_datas():
+def delete_all_collections_datas() -> None:
+    """Deletes everything in all db collections"""
     db.nodes.delete_many({})
     db.links.delete_many({})
     db.stats.delete_many({})
     db.utilization.delete_many({})
 
 
-def main():
+def main() -> None:
+    """Handles user interface (arguments) and calls the main 'add_fake_datas' func"""
     parser = ArgumentParser(
         prog="db_filler",
         description="Fill db with fake datas",
@@ -397,14 +226,17 @@ def main():
         "-a",
         "--add_stats_only",
         type=bool,
-        help="If this flag is set, we only add new iface stats for the current timestamp (useful when you already have enough nodes/links)",
+        help="If this flag is set, we only add new iface stats for the current \
+            timestamp (useful when you already have enough nodes/links)",
         default=False,
     )
     parser.add_argument(
         "-r",
         "--random_bytes",
         type=bool,
-        help="By default, it adds fake datas with random bytes on the ifaces/utilizations. Can be set to false for tests and stuff to have predictive results",
+        help="By default, it adds fake datas with random bytes on the \
+            ifaces/utilizations. Can be set to false for tests and stuff \
+            to have predictive results",
         default=True,
     )
     parser.add_argument(
