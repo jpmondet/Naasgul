@@ -1,13 +1,17 @@
+"""This module is a standalone LLDP scrapper that uses snmp.
+Datas retrieved are stored into db."""
 #! /usr/bin/env python3
+
+# pylint: disable=too-many-locals,too-many-branches
 
 from os import getenv
 import asyncio
 from itertools import groupby
-from binascii import hexlify
-from time import time, sleep
-from typing import List, Dict, Any, Tuple
+from time import sleep
+from typing import List, Dict, Tuple, Iterable, Optional, Union
 from pymongo.errors import InvalidOperation  # type: ignore
 from pysnmp.error import PySnmpError  # type: ignore
+from pysnmp import hlapi  # type: ignore
 from dpath.util import search  # type: ignore
 from db_layer import (
     prep_db_if_not_exist,
@@ -23,78 +27,65 @@ from snmp_functions import (
     NEEDED_MIBS_FOR_LLDP as NEEDED_MIBS,
 )
 
-SNMP_USR = getenv("SNMP_USR")
-SNMP_AUTH_PWD = getenv("SNMP_AUTH_PWD")
-SNMP_PRIV_PWD = getenv("SNMP_PRIV_PWD")
-INIT_NODE_FQDN = getenv("LLDP_INIT_NODE_FQDN", "")
-INIT_NODE_IP = getenv("LLDP_INIT_NODE_IP", "")
-INIT_NODE_PORT = getenv("LLDP_INIT_NODE_PORT", "161")
-STOP_NODES_FQDN = getenv("STOP_NODES_FQDN")
-STOP_NODES_IP = getenv("STOP_NODES_IP")
-NB_THREADS = getenv("AUTOMAP_NB_THREADS", "10")
+SNMP_USR: Optional[str] = getenv("SNMP_USR")
+SNMP_AUTH_PWD: Optional[str] = getenv("SNMP_AUTH_PWD")
+SNMP_PRIV_PWD: Optional[str] = getenv("SNMP_PRIV_PWD")
+INIT_NODE_FQDN: Optional[str] = getenv("LLDP_INIT_NODE_FQDN", "")
+INIT_NODE_IP: str = getenv("LLDP_INIT_NODE_IP", "")
+INIT_NODE_PORT: str = getenv("LLDP_INIT_NODE_PORT", "161")
+STOP_NODES_FQDN: Optional[str] = getenv("STOP_NODES_FQDN")
+STOP_NODES_IP: Optional[str] = getenv("STOP_NODES_IP")
+NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
 
 
-def dump_results_to_db(device_name, lldp_infos) -> None:
+def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> None:
+    """Format retrieved snmp datas & dumps them into db"""
     nodes_list: List[Tuple[Dict[str, str], Dict[str, str]]] = []
     links_list: List[Tuple[Dict[str, str], Dict[str, str]]] = []
 
     # Each item of the lists are composed by the "query" (so the DB knows which entry to update
     # And the actual data
-    dev_name = device_name.lower()
-    query = {"device_name": dev_name}
+    dev_name: str = device_name.lower()
+    query: Dict[str, str] = {"device_name": dev_name}
     # We add the device if it doesn't exist
     nodes_list.append((query, query))
 
     for lldp_nei in lldp_infos:
         # Getting neigh node infos and adding it to nodes_list
+        neigh_name: str = ''
         _, neigh_name = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_name']}*", yielded=True))
+        neigh_name = neigh_name.lower()
+        if not neigh_name or neigh_name in ["null", "localhost.localdomain"]:
+            # Was using the IP at first, but it can lead to duplicates if some devices
+            # are already known only by their fqdn
+            continue
 
         # IP is a lil' special since it is written in the oid (yeah weird)
+        neigh_ip_oid: str = ''
         neigh_ip_oid, _ = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_ip']}*", yielded=True))
-        neigh_ip = ".".join(neigh_ip_oid.split(".")[-4:])
-        if neigh_name == "null" and neigh_ip:
-            # if neigh_ip == "0.0.0.0":
-            #    continue
-            # neigh_name == neigh_ip
-            continue
-        elif not neigh_name and neigh_ip:
-            # if neigh_ip == "0.0.0.0":
-            #    continue
-            # neigh_name = neigh_ip
-            continue
-        elif not neigh_name:
-            continue
-        elif neigh_name == "null":
-            continue
-        neigh_name = neigh_name.lower()
-        if neigh_name == "localhost.localdomain":
-            continue
-        query_neigh = {"device_name": neigh_name}
+        neigh_ip: str = ".".join(neigh_ip_oid.split(".")[-4:])
+
+        query_neigh: Dict[str, str] = {"device_name": neigh_name}
         nodes_list.append((query_neigh, {"device_name": neigh_name, "device_ip": neigh_ip}))
 
         # Getting neigh and local ifaces infos and adding them to link list
+        local_iface: str = ""
+        neigh_iface: str = ""
         _, local_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_local_iface']}*", yielded=True))
         _, neigh_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface']}*", yielded=True))
         # Stripping "Et, Ethernet, E,... " which can be different per equipment
-        if isinstance(local_iface, str):
-            dev_iface = "/".join(
-                "".join(x)
-                for is_number, x in groupby(local_iface, key=str.isdigit)
-                if is_number is True
-            )
-        else:
-            dev_iface = str(dev_iface)
+        dev_iface = "/".join(
+            "".join(x)
+            for is_number, x in groupby(str(local_iface), key=str.isdigit)
+            if is_number is True
+        )
+        neigh_iface = "/".join(
+            "".join(x)
+            for is_number, x in groupby(str(neigh_iface), key=str.isdigit)
+            if is_number is True
+        )
 
-        if isinstance(neigh_iface, str):
-            neigh_iface = "/".join(
-                "".join(x)
-                for is_number, x in groupby(neigh_iface, key=str.isdigit)
-                if is_number is True
-            )
-        else:
-            neigh_iface = str(neigh_iface)
-
-        query_link = {
+        query_link: Dict[str, str] = {
             "device_name": dev_name,
             "iface_name": dev_iface,
             "neighbor_name": neigh_name,
@@ -109,7 +100,7 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
 
         links_list.append((query_link, query_link))
 
-        query_neigh_link = {
+        query_neigh_link: Dict[str,str] = {
             "device_name": neigh_name,
             "iface_name": neigh_iface,
             "neighbor_name": dev_name,
@@ -124,7 +115,14 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
         print("Nothing to dump to db (wasn't able to scrap devices?), passing..")
 
 
-async def get_device_lldp_infos(target_name, oids, credentials, target_ip=None, port=161):
+async def get_device_lldp_infos(
+    target_name: str,
+    oids: List[str],
+    credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
+    target_ip: Optional[str]=None,
+    port: int=161
+) -> None:
+    """Using snmp to get lldp infos & dumping them into db by calling dump_results_to_db"""
 
     target = target_ip if target_ip else target_name
     target_name = target if not target_name else target_name
@@ -136,8 +134,13 @@ async def get_device_lldp_infos(target_name, oids, credentials, target_ip=None, 
         print(err, "\n (can't access to devices?) Passing for now...")
 
 
-def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ""):
-    scrapped: List[Dict[str, str]] = get_all_nodes()
+def lldp_scrapping(
+    snmp_credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
+    init_node_fqdn: str = "") -> None:
+    """Main lldp scrapping func that launch threads to scrap
+    devices"""
+
+    scrapped: Iterable[Dict[str, str]] = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
     for dev in scrapped:
         if "fake" in dev["device_name"]:
@@ -176,10 +179,14 @@ def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ""):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            asyncio.wait(
+            asyncio.wait( # type: ignore
                 [
                     get_device_lldp_infos(
-                        hostname, NEEDED_MIBS.values(), snmp_credentials, target_ip=ip, port=port
+                        hostname,
+                        NEEDED_MIBS.values(), # type: ignore
+                        snmp_credentials,
+                        target_ip=ip,
+                        port=port
                     )
                     for hostname, ip, port in devices_to_scrap
                 ]
@@ -191,7 +198,9 @@ def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ""):
         sleep(int(60 * (len(devices) / int(NB_THREADS))) + 30)
 
 
-def main():
+def main() -> None:
+    """Get hlapi credents, prepare the db & launch the
+    scrapping loop"""
 
     creds = get_snmp_creds(SNMP_USR, SNMP_AUTH_PWD, SNMP_PRIV_PWD)
 
