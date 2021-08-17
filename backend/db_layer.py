@@ -6,7 +6,7 @@ that can be (and should be) abstracted """
 from os import getenv
 
 # from re import compile as rcompile, IGNORECASE as rIGNORECASE
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Iterable, Tuple
 from time import time
 
 from pymongo import MongoClient, UpdateMany  # type: ignore
@@ -31,7 +31,7 @@ UTILIZATION_COLLECTION = DB.utilization
 LINKS_COLLECTION = DB.links
 
 
-def prep_db_if_not_exist():
+def prep_db_if_not_exist() -> None:
     """If db is empty, we create proper indexes."""
 
     if (
@@ -58,28 +58,34 @@ def prep_db_if_not_exist():
     UTILIZATION_COLLECTION.create_index([("device_name", 1), ("iface_name", 1)], unique=True)
 
 
-def get_entire_collection(mongodb_collection) -> List[Dict[str, Any]]:
+def get_entire_collection(mongodb_collection) -> List[Dict[str, Any]]: # type: ignore
+    """Returns the entire collection passed in parameter as a list"""
     return list(mongodb_collection.find({}))
 
 
-def get_all_nodes() -> List[Dict[str, Any]]:
+def get_all_nodes() -> Iterable[Dict[str, Any]]:
+    """Returns all nodes as an iterator"""
     return get_entire_collection(NODES_COLLECTION)
 
 
 def get_node(node_name: str) -> Dict[str, Any]:
-    return NODES_COLLECTION.find_one({"device_name": node_name})
+    """Returns a single exact node from the db"""
+    return NODES_COLLECTION.find_one({"device_name": node_name}) # type: ignore
 
 
-def get_all_links() -> List[Dict[str, Any]]:
+def get_all_links() -> Iterable[Dict[str, Any]]:
+    """Returns all links as an iterator"""
     return get_entire_collection(LINKS_COLLECTION)
 
-
 def get_all_highest_utilizations() -> Dict[str, int]:
+    """Calculates and returns all highest links utilizations
+    as a dict. Keys are constructed as 'device_name+iface_name'"""
+
     utilizations: Dict[str, int] = {}
     current_timestamp: int = int(time())
 
     for utilization in get_entire_collection(UTILIZATION_COLLECTION):
-        id_utilz = utilization["device_name"] + utilization["iface_name"]
+        id_utilz: str = utilization["device_name"] + utilization["iface_name"]
         if utilizations.get(id_utilz):
             continue
         try:
@@ -110,6 +116,9 @@ def get_all_highest_utilizations() -> Dict[str, int]:
 
 
 def get_all_speeds() -> Dict[str, int]:
+    """Returns all links speeds as a dict.
+    Keys are constructed as 'device_name+iface_name'"""
+
     speeds: Dict[str, int] = {}
     for stat in get_entire_collection(STATS_COLLECTION):
         id_speed = stat["device_name"] + stat["iface_name"]
@@ -121,27 +130,35 @@ def get_all_speeds() -> Dict[str, int]:
 
 
 def get_links_device(device: str) -> List[Dict[str, Any]]:
+    """Returns all links of one specific device (also looks
+    at links on which this device is appearing as a neighbor)"""
+
     query: List[Dict[str, str]] = [{"device_name": device}, {"neighbor_name": device}]
-    return LINKS_COLLECTION.find({"$or": query})
+    return LINKS_COLLECTION.find({"$or": query}) # type: ignore
 
 
-def get_stats_devices(devices: List[str]):
+def get_stats_devices(devices: List[str]) -> Iterable[Dict[str, Any]]:
+    """Returns all stats of all devices passed in parameter"""
+
     query: List[Dict[str, str]] = [{"device_name": device} for device in devices]
-    return STATS_COLLECTION.find({"$or": query})
+    return STATS_COLLECTION.find({"$or": query}) # type: ignore
 
 
-def get_speed_iface(device_name: str, iface_name: str):
+def get_speed_iface(device_name: str, iface_name: str) -> int:
+    """Returns speed (max bandwidth, not utilization) of a specific interface"""
     speed: int = 1
     try:
         *_, laststat = STATS_COLLECTION.find({"device_name": device_name, "iface_name": iface_name})
-        return laststat["speed"]
+        speed = laststat["speed"]
     except (KeyError, IndexError) as err:
         print("oops? " + str(err))
-        return 10
+        speed = 10
     return speed
 
 
-def get_latest_utilization(device_name: str, iface_name: str):
+def get_latest_utilization(device_name: str, iface_name: str) -> Tuple[int, int]:
+    """Returns last link utilization) of a specific interface"""
+
     utilization_line = UTILIZATION_COLLECTION.find_one(
         {"device_name": device_name, "iface_name": iface_name}
     )
@@ -152,10 +169,19 @@ def get_latest_utilization(device_name: str, iface_name: str):
 
 
 def add_iface_stats(stats: List[Dict[str, Any]]) -> None:
+    """Tries to insert all stats from parameter directly to db"""
+
     STATS_COLLECTION.insert_many(stats)
 
 
-def add_node(node_name: str, groupx: int = 11, groupy: int = 11, image: str = "router.png") -> None:
+def add_node(
+    node_name: str,
+    groupx: Optional[int] = 11,
+    groupy: Optional[int] = 11,
+    image: Optional[str] = "router.png"
+) -> None:
+    """Inserts (or updates) a node into db"""
+
     try:
         NODES_COLLECTION.insert_one(
             {"device_name": node_name, "groupx": groupx, "groupy": groupy, "image": image}
@@ -175,6 +201,8 @@ def add_node(node_name: str, groupx: int = 11, groupy: int = 11, image: str = "r
 
 
 def add_link(node_name: str, neigh_name: str, local_iface: str, neigh_iface: str) -> None:
+    """Tries to insert a link directly into db"""
+
     try:
         LINKS_COLLECTION.insert_one(
             {
@@ -189,6 +217,8 @@ def add_link(node_name: str, neigh_name: str, local_iface: str, neigh_iface: str
 
 
 def add_fake_iface_utilization(device_name: str, iface_name: str) -> None:
+    """Inserts (or updates) default (0) link utilization into db"""
+
     UTILIZATION_COLLECTION.update_one(
         {"device_name": f"{device_name}", "iface_name": f"{iface_name}"},
         {
@@ -204,6 +234,8 @@ def add_fake_iface_utilization(device_name: str, iface_name: str) -> None:
 
 
 def add_fake_iface_stats(device_name: str, iface_name: str) -> None:
+    """Inserts fake stats for a specific interface into db"""
+
     STATS_COLLECTION.insert_one(
         {
             "device_name": f"{device_name}",
@@ -228,10 +260,13 @@ def add_fake_iface_stats(device_name: str, iface_name: str) -> None:
     )
 
 
-def bulk_update_collection(mongodb_collection, list_tuple_key_query) -> None:
-    # Request is using UpdateMany
+def bulk_update_collection(mongodb_collection, list_tuple_key_query) -> None: # type: ignore
+    """Update massively a collection. It uses the special 'UpdateMany'
+    pymongo object :
     # (https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html\
     # ?highlight=update#pymongo.collection.Collection.update_many)
+    """
+
     request: List[UpdateMany] = []
     for query, data in list_tuple_key_query:
         request.append(UpdateMany(query, {"$set": data}, True))
@@ -239,7 +274,10 @@ def bulk_update_collection(mongodb_collection, list_tuple_key_query) -> None:
     mongodb_collection.bulk_write(request)
 
 
-def delete_node(node_name: str):
+def delete_node(node_name: str) -> None:
+    """Deletes everything related to a specific node from db.
+    (everything means node, links, stats & utilizations entries)"""
+
     NODES_COLLECTION.delete_one({"device_name": node_name})
     LINKS_COLLECTION.delete_many({"device_name": node_name})
     LINKS_COLLECTION.delete_many({"neighbor_name": node_name})
