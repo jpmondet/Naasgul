@@ -327,8 +327,8 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
             except KeyError:
                 speed = 1000000  # Can't determine speed
                 highest_utilization = 0  # Can't determine utilization
-                percent_highest = 0
-                #logger.error(f"Cant find speed for {device+iface} in {speeds}")
+                percent_highest = 0.0
+                logger.error(f"Cant find speed for {device+iface} in {speeds}")
 
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):

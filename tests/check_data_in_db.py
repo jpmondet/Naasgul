@@ -6,7 +6,7 @@ from pymongo import MongoClient  # type: ignore
 
 # https://pymongo.readthedocs.io/en/stable/tutorial.html
 
-AUTOMAPPING_DB = "mongodb://localhost:27017/"
+AUTOMAPPING_DB: str = "mongodb://localhost:27017/"
 
 client = MongoClient(AUTOMAPPING_DB)
 
