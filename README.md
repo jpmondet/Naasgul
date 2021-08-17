@@ -36,7 +36,7 @@ Interfaces will have random bytes values (but for one timestamp only).
 
 If you want to add more stats to interfaces, you can add the flag `-a 1` (so interfaces' graphs will be a lil' more than just a point ;-) )
 
-By throwing some `-a 1`, you should get you something like this :
+By throwing some `-a 1`, you should get something like this :
 
 ![Sample 5-stage fabric](https://github.com/jpmondet/Naasgul/raw/master/resources/sample_5_stages_fabric.png)
 
