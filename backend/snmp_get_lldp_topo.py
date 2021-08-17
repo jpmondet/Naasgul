@@ -53,14 +53,14 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
         neigh_ip_oid, _ = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_ip']}*", yielded=True))
         neigh_ip = ".".join(neigh_ip_oid.split(".")[-4:])
         if neigh_name == "null" and neigh_ip:
-            #if neigh_ip == "0.0.0.0":
+            # if neigh_ip == "0.0.0.0":
             #    continue
-            #neigh_name == neigh_ip
+            # neigh_name == neigh_ip
             continue
         elif not neigh_name and neigh_ip:
-            #if neigh_ip == "0.0.0.0":
+            # if neigh_ip == "0.0.0.0":
             #    continue
-            #neigh_name = neigh_ip
+            # neigh_name = neigh_ip
             continue
         elif not neigh_name:
             continue
@@ -101,7 +101,6 @@ def dump_results_to_db(device_name, lldp_infos) -> None:
             "neighbor_iface": neigh_iface,
         }
 
-
         if not dev_name or not dev_iface or not neigh_name or not neigh_iface:
             # Ensure that all values are defined
             # Else we don't add this link
@@ -137,13 +136,13 @@ async def get_device_lldp_infos(target_name, oids, credentials, target_ip=None, 
         print(err, "\n (can't access to devices?) Passing for now...")
 
 
-def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ''):
+def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ""):
     scrapped: List[Dict[str, str]] = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
     for dev in scrapped:
         if "fake" in dev["device_name"]:
             continue
-        devices.append((dev["device_name"], '', 161))
+        devices.append((dev["device_name"], "", 161))
 
     if not devices:
         if INIT_NODE_FQDN:
@@ -152,7 +151,7 @@ def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ''):
             device = (INIT_NODE_IP, INIT_NODE_IP, int(INIT_NODE_PORT))
         elif init_node_fqdn:
             # This is a pytest case
-            device = (init_node_fqdn, '', 1161)
+            device = (init_node_fqdn, "", 1161)
         else:
             # Ok we certainly have fake datas
             device = ("fake_local_device", "127.0.0.1", 1161)
@@ -161,7 +160,7 @@ def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ''):
     if STOP_NODES_FQDN:
         stop_fqdns = STOP_NODES_FQDN.split(",")
         for node in stop_fqdns:
-            node_tuple = (node, '', 161)
+            node_tuple = (node, "", 161)
             if node_tuple in devices:
                 devices.remove(node_tuple)
     if STOP_NODES_IP:
