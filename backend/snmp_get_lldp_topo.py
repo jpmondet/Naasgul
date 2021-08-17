@@ -128,7 +128,7 @@ async def get_device_lldp_infos(
     target_name = target if not target_name else target_name
 
     try:
-        res = get_table(target, oids, credentials, port=port)
+        res: List[Dict[str, str]] = get_table(target, oids, credentials, port=port)
         dump_results_to_db(target_name, res)
     except (RuntimeError, PySnmpError) as err:
         print(err, "\n (can't access to devices?) Passing for now...")
@@ -136,7 +136,8 @@ async def get_device_lldp_infos(
 
 def lldp_scrapping(
     snmp_credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
-    init_node_fqdn: str = "") -> None:
+    init_node_fqdn: str = ""
+) -> None:
     """Main lldp scrapping func that launch threads to scrap
     devices"""
 
@@ -199,7 +200,7 @@ def lldp_scrapping(
 
 
 def main() -> None:
-    """Get hlapi credents, prepare the db & launch the
+    """Get hlapi credentials, prepare the db & launch the
     scrapping loop"""
 
     creds = get_snmp_creds(SNMP_USR, SNMP_AUTH_PWD, SNMP_PRIV_PWD)

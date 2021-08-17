@@ -227,8 +227,8 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tupl
 
 
 @app.get("/graph")
-# def get_graph(credentials=Depends(check_credentials)):
-def get_graph() -> Dict[str, List[Dict[str, Any]]]: # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def get_graph() -> Dict[str, List[Dict[str, Any]]]:
     """
             "links": [
                 {

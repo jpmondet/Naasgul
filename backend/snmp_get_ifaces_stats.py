@@ -1,3 +1,6 @@
+"""This module is a standalone Stats scrapper that uses snmp
+to get interfaces stats for a lot of devices.
+Datas retrieved are then stored into db."""
 #! /usr/bin/env python3
 
 from os import getenv
@@ -5,9 +8,10 @@ import asyncio
 from itertools import groupby
 from binascii import hexlify
 from time import time, sleep
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Iterable, Optional, Any, Union
 from pymongo.errors import InvalidOperation  # type: ignore
 from pysnmp.error import PySnmpError  # type: ignore
+from pysnmp import hlapi  # type: ignore
 from dpath.util import search  # type: ignore
 from db_layer import (
     prep_db_if_not_exist,
@@ -25,20 +29,22 @@ from snmp_functions import (
     split_list,
 )
 
-SNMP_USR = getenv("SNMP_USR")
-SNMP_AUTH_PWD = getenv("SNMP_AUTH_PWD")
-SNMP_PRIV_PWD = getenv("SNMP_PRIV_PWD")
-TEST_CASE = getenv("AUTOMAP_TEST_CASE")
-NB_THREADS = getenv("AUTOMAP_NB_THREADS", "10")
+SNMP_USR: Optional[str] = getenv("SNMP_USR")
+SNMP_AUTH_PWD: Optional[str] = getenv("SNMP_AUTH_PWD")
+SNMP_PRIV_PWD: Optional[str] = getenv("SNMP_PRIV_PWD")
+TEST_CASE: Optional[str] = getenv("AUTOMAP_TEST_CASE")
+NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
 
 
-def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=too-many-locals
+def dump_results_to_db(device_name: str, ifaces_infos: List[Dict[str, str]]) -> None:  # pylint: disable=too-many-locals
+    """Format retrieved snmp datas & dumps them into db"""
     utilization_list: List[Tuple[Dict[str, str], Dict[str, str]]] = []
     stats_list: List[Dict[str, str]] = []
     for iface in ifaces_infos:
+        ifname: str = ''
         _, ifname = next(search(iface, f"{NEEDED_MIBS['iface_name']}*", yielded=True))
-        ifname = ifname.lower()
-        if (
+        ifname = str(ifname).lower()
+        if ( # pylint: disable=too-many-boolean-expressions
             ifname.startswith("se")
             or ifname.startswith("nu")
             or ifname.startswith("lo")
@@ -47,8 +53,9 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
             or ifname.startswith("po")
             or ifname == "vlan1"
         ):
-            # TODO: Mgmt ifaces/lo & po could actually be interesting... Need to think about this
+            # To do: Mgmt ifaces/lo & po could actually be interesting... Need to think about this
             continue
+        ifalias: str = ''
         _, ifalias = next(search(iface, f"{NEEDED_MIBS['iface_alias']}*", yielded=True))
         # if not ifalias:
         #    # We won't get stats of ifaces with no description
@@ -69,12 +76,13 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         _, out_mcast_pkts = next(search(iface, f"{NEEDED_MIBS['out_mcast_pkts']}*", yielded=True))
         _, out_bcast_pkts = next(search(iface, f"{NEEDED_MIBS['out_bcast_pkts']}*", yielded=True))
 
-        iface_infos_dict = {
-            "ifalias": ifalias,
-            "mtu": mtu,
+        iface_infos_dict: Dict[str, Any] = {
+            "ifalias": str(ifalias),
+            "mtu": int(mtu),
             "mac": hexlify(mac.encode()).decode(),
-            "speed": speed,
-            "in_discards": int(in_disc) % (2 ** 64 - 1),
+            "speed": int(speed),
+            "in_discards": int(in_disc) % (2 ** 64 - 1), # There are some weird devices
+                                                         # returning values greater than 2**64...
             "in_errors": int(in_err) % (2 ** 64 - 1),
             "out_discards": int(out_disc) % (2 ** 64 - 1),
             "out_errors": int(out_err) % (2 ** 64 - 1),
@@ -91,7 +99,7 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         iface_name = "/".join(
             "".join(x) for is_number, x in groupby(ifname, key=str.isdigit) if is_number is True
         )
-        iface_stats_dict = {
+        iface_stats_dict: Dict[str, Any] = {
             "device_name": device_name,
             "iface_name": iface_name,
             "timestamp": int(time()),
@@ -100,12 +108,12 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         stats_list.append(iface_stats_dict)
         # Each item of the lists are composed are the "query" (so the DB knows which entry to update
         # And the actual data
-        query = {"device_name": device_name, "iface_name": iface_name}
-        highest = int(iface_infos_dict["in_bytes"])
-        lowest = int(iface_infos_dict["out_bytes"])
+        query: Dict[str, str] = {"device_name": device_name, "iface_name": iface_name}
+        highest: int = int(iface_infos_dict["in_bytes"])
+        lowest: int = int(iface_infos_dict["out_bytes"])
         highest = max(highest, lowest)
         previous_utilization, previous_timestamp = get_latest_utilization(device_name, iface_name)
-        utilization = {
+        utilization: Dict[str, Any] = {
             "device_name": device_name,
             "iface_name": iface_name,
             "prev_utilization": previous_utilization,
@@ -123,20 +131,33 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
     except OverflowError:
         print("OverflowError 0_o (int longer than 64bit) : " + str(utilization_list))
 
+# pylint: disable=too-many-arguments
+async def get_stats_and_dump(
+    target_name: str,
+    oids: List[str],
+    credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
+    count_oid: str,
+    target_ip: Optional[str]=None,
+    port: int=161
+) -> None:
+    """Using snmp to get iface(stats) infos & dumping them into db by calling dump_results_to_db"""
 
-async def get_stats_and_dump(target_name, oids, credentials, count_oid, target_ip=None, port=161):
-
-    target = target_ip if target_ip else target_name
+    target: str = target_ip if target_ip else target_name
 
     try:
-        res = get_bulk_auto(target, oids, credentials, count_oid, port=port)
+        res: List[Dict[str, str]] = get_bulk_auto(target, oids, credentials, count_oid, port=port)
         dump_results_to_db(target_name, res)
     except (RuntimeError, PySnmpError) as err:
         print(err, "\n (can't access to devices?) Passing for now...")
 
 
-def stats_scrapping(snmp_credentials, init_node_fqdn: str = ""):
-    scrapped: List[Dict[str, str]] = get_all_nodes()
+def stats_scrapping(
+    snmp_credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
+    init_node_fqdn: str = ""
+) -> None:
+    """Main ifaces(stats) scrapping func that launch threads to scrap
+    devices"""
+    scrapped: Iterable[Dict[str, str]] = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
     if init_node_fqdn:
         # This is a pytest case
@@ -153,11 +174,11 @@ def stats_scrapping(snmp_credentials, init_node_fqdn: str = ""):
         for devices_to_scrap in split_list(devices, int(NB_THREADS)):
             loop = asyncio.get_event_loop()
             loop.run_until_complete(
-                asyncio.wait(
+                asyncio.wait( # type: ignore
                     [
                         get_stats_and_dump(
                             hostname,
-                            NEEDED_MIBS.values(),
+                            NEEDED_MIBS.values(), # type: ignore
                             snmp_credentials,
                             IFACES_TABLE_TO_COUNT,
                             target_ip=ip,
@@ -175,7 +196,9 @@ def stats_scrapping(snmp_credentials, init_node_fqdn: str = ""):
         sleep(60)
 
 
-def main():
+def main() -> None:
+    """Get hlapi credentials, prepare the db & launch the
+    scrapping loop"""
 
     creds = get_snmp_creds(SNMP_USR, SNMP_AUTH_PWD, SNMP_PRIV_PWD)
 
