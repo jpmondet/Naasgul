@@ -15,7 +15,7 @@ from api_for_frontend import (
     Node,
     Neighbor,
     add_static_node,
-    delete_node_by_fqdn
+    delete_node_by_fqdn,
 )
 from db_layer import prep_db_if_not_exist, get_node
 
@@ -44,7 +44,7 @@ def test_graph_nodes():
 
 def test_graph_links():
     graph = get_graph()
-    sorted_links = sorted(graph["links"],key=lambda d: (d["source"], d["target"]))
+    sorted_links = sorted(graph["links"], key=lambda d: (d["source"], d["target"]))
     sorted_test_links = sorted(TEST_GRAPH_DATA["links"], key=lambda d: (d["source"], d["target"]))
     # assert graph["links"] == TEST_GRAPH_DATA["links"]
     assert sorted_links == sorted_test_links
@@ -137,53 +137,57 @@ def test_neighborships_bad_request_with_list():
     with pytest.raises(HTTPException):
         neighs = neighborships(query)
 
+
 def test_add_static_node_no_ifaces():
     delete_all_collections_datas()
     prep_db_if_not_exist()
     node: Node = Node(name="test_static")
 
-    neigh: Neighbor = Neighbor(name = "fake_device_stage1_1", iface = "11/11", node_iface = "1/1")
+    neigh: Neighbor = Neighbor(name="fake_device_stage1_1", iface="11/11", node_iface="1/1")
 
     node_neighbors: List[Neighbor] = [neigh]
 
-    creds = HTTPBasicCredentials(username = "user", password = "pass")
+    creds = HTTPBasicCredentials(username="user", password="pass")
 
     with pytest.raises(HTTPException):
         add_static_node(node, node_neighbors, creds)
+
 
 def test_add_static_node_wrong_creds():
     delete_all_collections_datas()
     prep_db_if_not_exist()
     node: Node = Node(name="test_static", ifaces=["1/1"])
 
-    neigh: Neighbor = Neighbor(name = "fake_device_stage1_1", iface = "11/11", node_iface = "1/1")
+    neigh: Neighbor = Neighbor(name="fake_device_stage1_1", iface="11/11", node_iface="1/1")
 
     node_neighbors: List[Neighbor] = [neigh]
 
-    creds = HTTPBasicCredentials(username = "user1", password = "pass")
+    creds = HTTPBasicCredentials(username="user1", password="pass")
 
     add_static_node(node, node_neighbors, creds)
+
 
 def test_add_static_node():
     delete_all_collections_datas()
     prep_db_if_not_exist()
     node: Node = Node(name="test_static", ifaces=["1/1"])
 
-    neigh: Neighbor = Neighbor(name = "fake_device_stage1_1", iface = "11/11", node_iface = "1/1")
+    neigh: Neighbor = Neighbor(name="fake_device_stage1_1", iface="11/11", node_iface="1/1")
 
     node_neighbors: List[Neighbor] = [neigh]
 
-    creds = HTTPBasicCredentials(username = "user", password = "pass")
+    creds = HTTPBasicCredentials(username="user", password="pass")
 
     add_static_node(node, node_neighbors, creds)
 
     assert get_node(node.name)
 
+
 def test_delete_node_by_fqdn():
 
     node_name: str = "test_static"
 
-    creds = HTTPBasicCredentials(username = "user", password = "pass")
+    creds = HTTPBasicCredentials(username="user", password="pass")
 
     delete_node_by_fqdn(creds, node_name)
 

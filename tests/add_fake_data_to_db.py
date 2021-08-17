@@ -3,7 +3,8 @@
 from sys import exit as sexit, path as spath
 from os import getenv
 import os.path
-#import re
+
+# import re
 from random import randint
 from time import time
 from argparse import ArgumentParser
@@ -11,7 +12,7 @@ from pymongo import MongoClient, ASCENDING, UpdateMany  # type: ignore
 from pymongo.errors import DuplicateKeyError  # type: ignore
 
 spath.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
-from db_layer import ( # pylint:disable=import-error
+from db_layer import (  # pylint:disable=import-error
     prep_db_if_not_exist,
     get_latest_utilization,
 )
@@ -26,6 +27,7 @@ if not DB_STRING:
 client = MongoClient(DB_STRING)
 db = client.automapping
 
+
 def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
 
     nodes_per_stages: int = int(number_nodes / fabric_stages)
@@ -36,8 +38,8 @@ def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
                 db.nodes.insert_one(
                     {
                         "device_name": f"fake_device_stage{str(stage+1)}_{str(stage_node+1)}",
-                        #"group": stage + 1,
-                        #"image": "router.png",
+                        # "group": stage + 1,
+                        # "image": "router.png",
                     }
                 )
             except DuplicateKeyError:
@@ -46,14 +48,20 @@ def add_lots_of_nodes(number_nodes: int, fabric_stages: int):
                     {
                         "$set": {
                             "device_name": f"fake_device_stage{str(stage+1)}_{str(stage_node+1)}",
-                            #"group": stage + 1,
-                            #"image": "router.png",
+                            # "group": stage + 1,
+                            # "image": "router.png",
                         }
                     },
                 )
 
 
-def add_iface_utilization(device_name: str, iface_name: str, iface_bytes: int, previous_utilization: int, previous_timestamp: int):
+def add_iface_utilization(
+    device_name: str,
+    iface_name: str,
+    iface_bytes: int,
+    previous_utilization: int,
+    previous_timestamp: int,
+):
 
     last_utilization = iface_bytes * 8
     if previous_timestamp > 0:
@@ -68,7 +76,7 @@ def add_iface_utilization(device_name: str, iface_name: str, iface_bytes: int, p
                 "prev_utilization": previous_utilization,
                 "prev_timestamp": previous_timestamp,
                 "timestamp": int(time()),
-                "last_utilization": last_utilization
+                "last_utilization": last_utilization,
             }
         },
         True,
@@ -102,7 +110,9 @@ def add_iface_stats(device_name: str, iface_name: str, iface_bytes: int, previou
     )
 
 
-def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = False, random_bytes: bool = True):
+def add_lots_of_links(
+    number_nodes: int, fabric_stages: int, stats_only: bool = False, random_bytes: bool = True
+):
 
     node_number: int = 0
 
@@ -144,14 +154,20 @@ def add_lots_of_links(number_nodes: int, fabric_stages: int, stats_only: bool = 
                     )
 
                 iface_bytes: int = randint(0, 1250000) if random_bytes else node_number
-                previous_utilization, previous_timestamp = get_latest_utilization(up_device, down_iface)
+                previous_utilization, previous_timestamp = get_latest_utilization(
+                    up_device, down_iface
+                )
 
                 print(up_device, down_iface, down_device, up_iface, iface_bytes, number_nodes)
                 add_iface_stats(up_device, down_iface, iface_bytes, previous_utilization)
-                add_iface_utilization(up_device, down_iface, iface_bytes, previous_utilization, previous_timestamp)
+                add_iface_utilization(
+                    up_device, down_iface, iface_bytes, previous_utilization, previous_timestamp
+                )
 
                 add_iface_stats(down_device, up_iface, iface_bytes, previous_utilization)
-                add_iface_utilization(down_device, up_iface, iface_bytes, previous_utilization, previous_timestamp)
+                add_iface_utilization(
+                    down_device, up_iface, iface_bytes, previous_utilization, previous_timestamp
+                )
 
             node_number += node_increment
 
@@ -340,7 +356,9 @@ def add_stats_not_generic():
             )
 
 
-def add_fake_datas(nb_nodes: int, fabric_stages: int, add_stats_only: bool = False, random_bytes: bool = True):
+def add_fake_datas(
+    nb_nodes: int, fabric_stages: int, add_stats_only: bool = False, random_bytes: bool = True
+):
 
     fabric_stages = 1 if fabric_stages == 1 else int(fabric_stages / 2 + 1)
 

@@ -22,8 +22,9 @@ from db_layer import (
     add_node,
     add_link,
     NODES_COLLECTION,
-    MDDPK
+    MDDPK,
 )
+
 
 def test_db_prep():
     """Testing if cuniqueness onstraints are correctly applied on db preparation"""
@@ -49,6 +50,7 @@ def test_get_all_nodes():
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
+
 def test_get_all_links():
     node_name: str = "test_node"
     neigh_name: str = "test_neigh"
@@ -61,11 +63,11 @@ def test_get_all_links():
     assert len(links) == 1
     del links[0]["_id"]
     assert links[0] == {
-                "device_name": node_name,
-                "neighbor_name": neigh_name,
-                "iface_name": iface_name,
-                "neighbor_iface": neigh_iface_name,
-            }
+        "device_name": node_name,
+        "neighbor_name": neigh_name,
+        "iface_name": iface_name,
+        "neighbor_iface": neigh_iface_name,
+    }
 
     delete_all_collections_datas()
     prep_db_if_not_exist()
