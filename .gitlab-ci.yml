@@ -43,7 +43,7 @@ bandit:
   image: python:3.9.6-slim-buster
   script:
     - pip install bandit
-    - bandit backend/ tests/ scripts/
+    - bandit -c .bandit.cfg -r backend/ tests/ scripts/
 
 pytest:
   stage: tests
