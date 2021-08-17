@@ -165,8 +165,9 @@ def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> Non
             add_fake_iface_stats(node.name, iface)
             add_fake_iface_utilization(node.name, iface)
 
+
 def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
-    """ Tries to find to which groups the node should be affected
+    """Tries to find to which groups the node should be affected
     groupx is conditioned by the function of the device (if it's a core device
     for example) and groupy is conditioned by its localisation.
 
@@ -253,7 +254,11 @@ def get_graph():
     groups: Dict[str, int] = {}
 
     for node in nodes:
-        if not node.get("groupx") or not node.get("groupy") or (node["groupx"] == 11 and node["groupy"] == 11):
+        if (
+            not node.get("groupx")
+            or not node.get("groupy")
+            or (node["groupx"] == 11 and node["groupy"] == 11)
+        ):
             node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
 
         node["id"] = node["device_name"]
@@ -292,12 +297,13 @@ def get_graph():
                 logger.error(f"WARNING: Link discarded : {link}")
                 continue
 
-
             id_link = device + neigh
             id_link_neigh = neigh + device
 
             try:
-                speed = speeds[device + iface] # "speed" in snmp terms is actually the max speed of the iface
+                speed = speeds[
+                    device + iface
+                ]  # "speed" in snmp terms is actually the max speed of the iface
                 speed = speed * 1000000  # Convert speed to bits
                 highest_utilization = utilizations[device + iface]
                 percent_highest = highest_utilization / speed * 100
@@ -308,8 +314,7 @@ def get_graph():
                 speed = 1000000  # Can't determine speed
                 highest_utilization = 0  # Can't determine utilization
                 percent_highest = 0
-                #logger.error(f"Cant find speed for {device+iface} in {speeds}")
-
+                # logger.error(f"Cant find speed for {device+iface} in {speeds}")
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):
 
@@ -355,16 +360,16 @@ def get_graph():
                 # If we want to dissociate agg link into multilinks
                 # We have to handle "linknum"
                 # But for clarity on large topologies, this is commented out
-                #try:
+                # try:
                 #    f_link_2 = formatted_links[id_link].copy()
                 #    linknum = len(f_link_2["source_interfaces"])
                 #    id_link_2 = id_link + str(linknum)
-                #except KeyError:
+                # except KeyError:
                 #    f_link_2 = formatted_links[id_link_neigh].copy()
                 #    linknum = len(f_link_2["source_interfaces"])
                 #    id_link_2 = id_link_neigh + str(linknum)
 
-                #if linknum > 1:
+                # if linknum > 1:
                 #    f_link_2["linknum"] = linknum
                 #    f_link_2["highest_utilization"] = percent_highest
                 #    f_link_2["speed"] = speed
@@ -448,10 +453,10 @@ def stats(devices: List[str] = Query(None)):
                     }
                 else:
                     # Must calculate speed. Not just adding in_bytes or it will only increase.
-                    #prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
-                    #prev_timestamp: int = int(
+                    # prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
+                    # prev_timestamp: int = int(
                     #    datetime.strptime(prev_date, "%y-%m-%d %H:%M:%S").timestamp()
-                    #)
+                    # )
 
                     interval = inttimestamp - prev_timestamp
                     if interval > 0:
