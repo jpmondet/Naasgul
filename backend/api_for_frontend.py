@@ -16,7 +16,7 @@
 import logging
 import re
 from os import getenv
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Callable, Tuple, Iterable
 from collections import defaultdict
 from time import strftime, localtime, time
 from secrets import compare_digest
@@ -42,9 +42,9 @@ from db_layer import (
     delete_node,
 )
 
-app = FastAPI()
+app: FastAPI = FastAPI()
 
-origins = [
+origins: List[str] = [
     "http://127.0.0.1",
     "http://localhost",
     "http://localhost:8080",
@@ -64,7 +64,7 @@ app.add_middleware(
 API_USER: str = getenv("API_USER", "user")
 API_PASS: str = getenv("API_PASS", "pass")
 
-security = HTTPBasic()  # to do: Needs better security
+security: HTTPBasic = HTTPBasic()  # to do: Needs better security
 
 CACHE: Dict[str, Any] = {}
 CACHED_TIME: int = 300
@@ -97,10 +97,12 @@ class Neighbor(BaseModel):
     # which this class instance is the neighbor
 
 
-def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+def check_credentials(
+        credentials: HTTPBasicCredentials = Depends(security)
+    ) -> HTTPBasicCredentials:
     """Checks credentials on api calls"""
-    correct_username = compare_digest(credentials.username, API_USER)
-    correct_password = compare_digest(credentials.password, API_PASS)
+    correct_username: bool = compare_digest(credentials.username, API_USER)
+    correct_password: bool = compare_digest(credentials.password, API_PASS)
     if not (correct_username and correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -110,7 +112,11 @@ def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
     return credentials
 
 
-def get_from_db_or_cache(element: str, func=None, query=None):
+def get_from_db_or_cache(
+        element: str,
+        func: Optional[Callable[..., Any]] = None,
+        query: str = ''
+    ) -> Any:
     """Cache most db calls if they are not already cached.
     Also handles a timeout to retrieve from db from time to time"""
     global CACHE, CACHED_TIMEOUT
@@ -132,7 +138,7 @@ def get_from_db_or_cache(element: str, func=None, query=None):
     return CACHE[element]
 
 
-def background_time_update():
+def background_time_update() -> None:
     """Updates timeout so we know if we
     have to discard cached datas and retrieve from db again"""
     global CACHED_TIMEOUT, TIME
@@ -145,15 +151,16 @@ def background_time_update():
     logger.error(f"bgtimeupdEnd: {now}, {TIME}, {CACHED_TIMEOUT}")
 
 
-def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> None:
+def add_static_node_to_db(node: Node, neigh_infos: Optional[List[Neighbor]] = None) -> None:
     """Some nodes can't be scrapped with lldp so this function allows to add
     static nodes directly to db"""
 
-    add_node(node.name, node.groupx, node.groupy, node.image)  # type: ignore
+    add_node(node.name, node.groupx, node.groupy, node.image)
 
     if neigh_infos:
         for neigh in neigh_infos:
-            neigh.name = neigh.name if neigh.name else neigh.addr  # type: ignore
+            if not neigh.name and neigh.addr:
+                neigh.name = neigh.addr
             if get_node(neigh.name):
                 add_link(node.name, neigh.name, neigh.node_iface, neigh.iface)
                 add_link(neigh.name, node.name, neigh.iface, neigh.node_iface)
@@ -171,7 +178,7 @@ def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> Non
             add_fake_iface_stats(node.name, iface)
             add_fake_iface_utilization(node.name, iface)
 
-def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
+def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tuple[int, int]:
     """ Tries to find to which groups the node should be affected
     groupx is conditioned by the function of the device (if it's a core device
     for example) and groupy is conditioned by its localisation.
@@ -181,8 +188,8 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
     # Exemple for a device named sw1.iou
     # We assume that 'sw' is the function and '1' its localisation (yeah
     # not really a localisation but well, it's an example ;-) )
-    regex_pattern = re.compile("^([a-z]{2})([0-9]+).*", re.IGNORECASE)
-    matched = regex_pattern.match(node_name)
+    regex_pattern: re.Pattern[str] = re.compile("^([a-z]{2})([0-9]+).*", re.IGNORECASE) # pylint: disable=unsubscriptable-object
+    matched: Optional[re.Match[str]] = regex_pattern.match(node_name) # pylint: disable=unsubscriptable-object
     if not matched:
         # It may be a "fake" node with a "fake" name:
         regex_pattern = re.compile("^fake_device_stage([0-9]+)_([0-9]+)$", re.IGNORECASE)
@@ -190,11 +197,11 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
         if matched:
             # matched.group(2) could be used but it doesn't make sense right now since
             # d3.js 'force' handle it for those test devices which are at the 'same localisation'
-            return (matched.group(1), 1)
+            return (int(matched.group(1)), 1)
         # Unknown device, we push it to the right end of the graph
         return (7, 1)
-    device_function = matched.group(1)
-    device_localisation = matched.group(2)
+    device_function: str = matched.group(1)
+    device_localisation: str = matched.group(2)
 
     groupx: int = 1
     groupy: int = 1
@@ -221,7 +228,7 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
 
 @app.get("/graph")
 # def get_graph(credentials=Depends(check_credentials)):
-def get_graph(): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+def get_graph() -> Dict[str, List[Dict[str, Any]]]: # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
             "links": [
                 {
@@ -276,14 +283,17 @@ def get_graph(): # pylint: disable=too-many-locals,too-many-branches,too-many-st
     formatted_links: Dict[str, Any] = get_from_db_or_cache("formatted_links")
     highest_uses: Dict[str, int] = defaultdict(int)
     if not formatted_links:
-        links: Dict[str, Any] = get_from_db_or_cache("links", get_all_links)
+        links: Iterable[Dict[str, Any]] = get_from_db_or_cache("links", get_all_links)
         sorted_links: List[Dict[str, Any]] = sorted(
             links, key=lambda d: (d["device_name"], d["neighbor_name"])
         )
         formatted_links = {}
 
-        utilizations = get_from_db_or_cache("utilizations", get_all_highest_utilizations)
-        speeds = get_from_db_or_cache("speeds", get_all_speeds)
+        utilizations: Dict[str, int] = get_from_db_or_cache(
+                                           "utilizations",
+                                           get_all_highest_utilizations
+                                       )
+        speeds: Dict[str, int] = get_from_db_or_cache("speeds", get_all_speeds)
 
         # logger.error("Utilizations: " + str(utilizations))
         # logger.error("Speeds: " + str(speeds))
@@ -292,25 +302,25 @@ def get_graph(): # pylint: disable=too-many-locals,too-many-branches,too-many-st
 
         logger.error(f"Nb links to format:{len(sorted_links)}")
         for link in sorted_links:
-            device = link["device_name"]
-            iface = str(link["iface_name"])
-            neigh = link["neighbor_name"]
-            neigh_iface = str(link["neighbor_iface"])
+            device: str = link["device_name"]
+            iface: str = str(link["iface_name"])
+            neigh: str = link["neighbor_name"]
+            neigh_iface: str = str(link["neighbor_iface"])
             if not device or not iface or not neigh or not neigh_iface:
                 # Discard possible null ifaces
                 logger.error(f"WARNING: Link discarded : {link}")
                 continue
 
 
-            id_link = device + neigh
-            id_link_neigh = neigh + device
+            id_link: str = device + neigh
+            id_link_neigh: str = neigh + device
 
             try:
-                speed = speeds[device + iface] # "speed" in snmp terms
+                speed: int = speeds[device + iface] # "speed" in snmp terms
                                                # is actually the max speed of the iface
                 speed = speed * 1000000  # Convert speed to bits
-                highest_utilization = utilizations[device + iface]
-                percent_highest = highest_utilization / speed * 100
+                highest_utilization: int = utilizations[device + iface]
+                percent_highest: float = highest_utilization / speed * 100
                 if percent_highest > 100:
                     print(device, iface, speed, highest_utilization, percent_highest)
                     percent_highest = 0
@@ -323,7 +333,7 @@ def get_graph(): # pylint: disable=too-many-locals,too-many-branches,too-many-st
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):
 
-                f_link = {
+                f_link: Dict[str, Any] = {
                     "highest_utilization": percent_highest,
                     "source": device,
                     "source_interfaces": [iface],
@@ -391,7 +401,7 @@ def get_graph(): # pylint: disable=too-many-locals,too-many-branches,too-many-st
 
 
 @app.get("/stats/")
-def stats(devices: List[str] = Query(None)): # pylint: disable=too-many-locals
+def stats(devices: List[str] = Query(None)) -> Dict[str, Any]: # pylint: disable=too-many-locals
     """
     {
         "ifDescr": "Ethernet0/0",
@@ -427,7 +437,7 @@ def stats(devices: List[str] = Query(None)): # pylint: disable=too-many-locals
 
             stats_by_device = {}
 
-            sorted_stats = sorted(
+            sorted_stats: List[Dict[str, Any]] = sorted(
                 list(get_stats_devices(devices)),
                 key=lambda d: (d["device_name"], d["iface_name"], d["timestamp"]),
             )
@@ -435,15 +445,15 @@ def stats(devices: List[str] = Query(None)): # pylint: disable=too-many-locals
             prev_outbits: int = 0
             prev_timestamp: int = 0
             for stat in sorted_stats:
-                dname = stat["device_name"]
+                dname: str = stat["device_name"]
                 # ifname = stat["iface_name"].replace("Ethernet", "Et")
-                ifname = stat["iface_name"]
-                dbtime = stat["timestamp"]
+                ifname: str = stat["iface_name"]
+                dbtime: int = stat["timestamp"]
                 inttimestamp: int = int(dbtime)
-                timestamp = strftime("%y-%m-%d %H:%M:%S", localtime(inttimestamp))
-                stat_formatted = {"InSpeed": 0, "OutSpeed": 0, "time": timestamp}
-                inbits = int(stat["in_bytes"]) * 8
-                outbits = int(stat["out_bytes"]) * 8
+                timestamp: str = strftime("%y-%m-%d %H:%M:%S", localtime(inttimestamp))
+                stat_formatted: Dict[str, Any] = {"InSpeed": 0, "OutSpeed": 0, "time": timestamp}
+                inbits: int = int(stat["in_bytes"]) * 8
+                outbits: int = int(stat["out_bytes"]) * 8
                 # This iface wasn't in the struct.
                 # We add default infos (and speed to 0 since
                 # we don't know at how much speed it was before)
@@ -464,7 +474,7 @@ def stats(devices: List[str] = Query(None)): # pylint: disable=too-many-locals
                     #    datetime.strptime(prev_date, "%y-%m-%d %H:%M:%S").timestamp()
                     #)
 
-                    interval = inttimestamp - prev_timestamp
+                    interval: int = inttimestamp - prev_timestamp
                     if interval > 0:
                         in_speed: int = inbits - prev_inbits
                         in_speed = in_speed if in_speed >= 0 else -in_speed
@@ -491,7 +501,7 @@ def stats(devices: List[str] = Query(None)): # pylint: disable=too-many-locals
 # Leveraging query string validation built in FastApi to avoid having multiple IFs
 def neighborships(
     device: str = Query(..., min_length=1, max_length=100)  # , regex="^[a-z]{2,3}[0-9]{1}.iou$")
-):
+) -> List[Dict[str, str]]:
     """
     {
                     "deviceName":[
@@ -528,7 +538,7 @@ def neighborships(
                 device1, device2 = device2, device1
                 iface1, iface2 = iface2, iface1
 
-            id_link = f"{device1}{device2}{iface1}{iface2}"
+            id_link: str = f"{device1}{device2}{iface1}{iface2}"
             if neighs_dict.get(id_link):
                 continue
 
@@ -548,11 +558,11 @@ def neighborships(
 
 @app.get("/delete_node_by_fqdn")
 def delete_node_by_fqdn(
-    credentials=Depends(check_credentials),  # pylint: disable=unused-argument
+    credentials: HTTPBasicCredentials=Depends(check_credentials),  # pylint: disable=unused-argument
     node_name_or_ip: str = Query(
         ..., min_length=4, max_length=50
     ),  # , regex="^[a-z]{2,3}[0-9]{1}.iou$")
-):
+) -> Dict[str, str]:
     """Removes a node from the DB (Can't do it automatically since we can't know if the node
     is just temporary unreachable & now there are also static nodes)"""
     if not isinstance(node_name_or_ip, str):
@@ -566,9 +576,9 @@ def delete_node_by_fqdn(
 @app.get("/add_static_node")
 def add_static_node(
     node: Node,
-    node_neighbors: List[Neighbor] = None,
-    credentials=Depends(check_credentials),  # pylint: disable=unused-argument
-):
+    node_neighbors: Optional[List[Neighbor]] = None,
+    credentials: HTTPBasicCredentials=Depends(check_credentials),  # pylint: disable=unused-argument
+) -> Dict[str, str]:
     """Adds a node to the DB (static nodes that aren't lldp-discoverable)
     (see in scripts/add_non_lldp_device.py for the original script, it may be easier to use
     in some cases)"""
