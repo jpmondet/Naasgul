@@ -1,7 +1,10 @@
 # Naasgul: Network as a Graph using lldp
 (and snmp for now ;-) )
 
-![coverage](https://github.com/jpmondet/Naasgul/raw/master/resources/coverage.svg)
+![coverage](https://github.com/jpmondet/Naasgul/raw/master/resources/coverage.svg) 
+![pylint](https://github.com/jpmondet/Naasgul/raw/master/resources/pylint.svg)
+![mypy](https://github.com/jpmondet/Naasgul/raw/master/resources/mypy.svg)
+![bandit](https://github.com/jpmondet/Naasgul/raw/master/resources/bandit.svg)
 
 # /!\ [Work in Progress] /!\
 
@@ -50,8 +53,13 @@ With graphs like :
 
 Simply run `./scripts/ci_tests.sh` and it should run.
 
-## Generate coverage badge
+## Generate coverage & other badges
 
+### Coverage
 After running `pytest` with `--cov=backend/` (remember that a mongodb & a snmpsim must be running -> Gitlab-ci takes care of everything), we get a `.coverage` file.
 
 From there, we can just `coverage-badge -o resources/coverage.svg`
+
+### Others
+
+Pylint and stuff can be generated with : `anybadge -l pylint -v SCORE_OBTAINED -f pylint.svg 2=red 4=orange 8=yellow 10=green`

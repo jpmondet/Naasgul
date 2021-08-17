@@ -8,4 +8,5 @@ bandit
 scalene
 nodeenv
 coverage-badge
+anybadge
 -r backend/requirements.txt
