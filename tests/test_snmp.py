@@ -50,6 +50,6 @@ def test_getting_iface_stats():
         SNMP_NODE_TO_RETRIEVE, 1161)
     ]))
 
-    stats = list(get_stats_devices([SNMP_NODE_TO_RETRIEVE]))
+    stats_from_db = list(get_stats_devices([SNMP_NODE_TO_RETRIEVE]))
 
-    assert len(stats) == 8
+    assert len(stats_from_db) == 8
