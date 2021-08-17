@@ -50,7 +50,7 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
             # TODO: Mgmt ifaces/lo & po could actually be interesting... Need to think about this
             continue
         _, ifalias = next(search(iface, f"{NEEDED_MIBS['iface_alias']}*", yielded=True))
-        #if not ifalias:
+        # if not ifalias:
         #    # We won't get stats of ifaces with no description
         #    continue
         _, mtu = next(search(iface, f"{NEEDED_MIBS['mtu']}*", yielded=True))
@@ -74,18 +74,18 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
             "mtu": mtu,
             "mac": hexlify(mac.encode()).decode(),
             "speed": speed,
-            "in_discards": int(in_disc) % (2**64 - 1),
-            "in_errors": int(in_err) % (2**64 - 1),
-            "out_discards": int(out_disc) % (2**64 - 1),
-            "out_errors": int(out_err) % (2**64 - 1),
-            "in_bytes": int(in_octets) % (2**64 - 1),
-            "in_ucast_pkts": int(in_ucast_pkts) % (2**64 - 1),
-            "in_mcast_pkts": int(in_mcast_pkts) % (2**64 - 1),
-            "in_bcast_pkts": int(in_bcast_pkts) % (2**64 - 1),
-            "out_bytes": int(out_octets) % (2**64 - 1),
-            "out_ucast_pkts": int(out_ucast_pkts) % (2**64 - 1),
-            "out_mcast_pkts": int(out_mcast_pkts) % (2**64 - 1),
-            "out_bcast_pkts": int(out_bcast_pkts) % (2**64 - 1),
+            "in_discards": int(in_disc) % (2 ** 64 - 1),
+            "in_errors": int(in_err) % (2 ** 64 - 1),
+            "out_discards": int(out_disc) % (2 ** 64 - 1),
+            "out_errors": int(out_err) % (2 ** 64 - 1),
+            "in_bytes": int(in_octets) % (2 ** 64 - 1),
+            "in_ucast_pkts": int(in_ucast_pkts) % (2 ** 64 - 1),
+            "in_mcast_pkts": int(in_mcast_pkts) % (2 ** 64 - 1),
+            "in_bcast_pkts": int(in_bcast_pkts) % (2 ** 64 - 1),
+            "out_bytes": int(out_octets) % (2 ** 64 - 1),
+            "out_ucast_pkts": int(out_ucast_pkts) % (2 ** 64 - 1),
+            "out_mcast_pkts": int(out_mcast_pkts) % (2 ** 64 - 1),
+            "out_bcast_pkts": int(out_bcast_pkts) % (2 ** 64 - 1),
         }
 
         iface_name = "/".join(
@@ -124,7 +124,6 @@ def dump_results_to_db(device_name, ifaces_infos) -> None:  # pylint: disable=to
         print("OverflowError 0_o (int longer than 64bit) : " + str(utilization_list))
 
 
-
 async def get_stats_and_dump(target_name, oids, credentials, count_oid, target_ip=None, port=161):
 
     target = target_ip if target_ip else target_name
@@ -135,16 +134,17 @@ async def get_stats_and_dump(target_name, oids, credentials, count_oid, target_i
     except (RuntimeError, PySnmpError) as err:
         print(err, "\n (can't access to devices?) Passing for now...")
 
-def stats_scrapping(snmp_credentials, init_node_fqdn: str = ''):
+
+def stats_scrapping(snmp_credentials, init_node_fqdn: str = ""):
     scrapped: List[Dict[str, str]] = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
     if init_node_fqdn:
         # This is a pytest case
-        devices.append((init_node_fqdn, '', 1161))
+        devices.append((init_node_fqdn, "", 1161))
     for device in scrapped:
         if "fake" in device["device_name"]:
             continue
-        devices.append((device["device_name"], '', 161))
+        devices.append((device["device_name"], "", 161))
 
     if TEST_CASE:
         devices.append(("fake_local_device", "127.0.0.1", 1161))
@@ -167,7 +167,7 @@ def stats_scrapping(snmp_credentials, init_node_fqdn: str = ''):
                     ]
                 )
             )
-            #sleep(10)
+            # sleep(10)
         if not init_node_fqdn:
             sleep(int(60 + (len(devices) / int(NB_THREADS))))
     else:
