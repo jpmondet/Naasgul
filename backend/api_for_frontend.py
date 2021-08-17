@@ -17,7 +17,6 @@ import logging
 import re
 from os import getenv
 from typing import Dict, List, Any, Optional
-from datetime import datetime
 from collections import defaultdict
 from time import strftime, localtime, time
 from secrets import compare_digest
@@ -65,7 +64,7 @@ app.add_middleware(
 API_USER: str = getenv("API_USER", "user")
 API_PASS: str = getenv("API_PASS", "pass")
 
-security = HTTPBasic()  # TODO: Needs better security
+security = HTTPBasic()  # to do: Needs better security
 
 CACHE: Dict[str, Any] = {}
 CACHED_TIME: int = 300
@@ -99,6 +98,7 @@ class Neighbor(BaseModel):
 
 
 def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+    """Checks credentials on api calls"""
     correct_username = compare_digest(credentials.username, API_USER)
     correct_password = compare_digest(credentials.password, API_PASS)
     if not (correct_username and correct_password):
@@ -111,6 +111,8 @@ def check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 
 
 def get_from_db_or_cache(element: str, func=None, query=None):
+    """Cache most db calls if they are not already cached.
+    Also handles a timeout to retrieve from db from time to time"""
     global CACHE, CACHED_TIMEOUT
 
     timeout: bool = False
@@ -131,17 +133,21 @@ def get_from_db_or_cache(element: str, func=None, query=None):
 
 
 def background_time_update():
+    """Updates timeout so we know if we
+    have to discard cached datas and retrieve from db again"""
     global CACHED_TIMEOUT, TIME
     now: int = int(time())
     logger.error(f"bgtimeupd: {now}, {TIME}, {CACHED_TIMEOUT}")
     if now - TIME > CACHED_TIME:
         TIME = now
-        for elem in CACHED_TIMEOUT.keys():
+        for elem in CACHED_TIMEOUT:
             CACHED_TIMEOUT[elem] = True
     logger.error(f"bgtimeupdEnd: {now}, {TIME}, {CACHED_TIMEOUT}")
 
 
 def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> None:
+    """Some nodes can't be scrapped with lldp so this function allows to add
+    static nodes directly to db"""
 
     add_node(node.name, node.groupx, node.groupy, node.image)  # type: ignore
 
@@ -165,9 +171,8 @@ def add_static_node_to_db(node: Node, neigh_infos: List[Neighbor] = None) -> Non
             add_fake_iface_stats(node.name, iface)
             add_fake_iface_utilization(node.name, iface)
 
-
 def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
-    """Tries to find to which groups the node should be affected
+    """ Tries to find to which groups the node should be affected
     groupx is conditioned by the function of the device (if it's a core device
     for example) and groupy is conditioned by its localisation.
 
@@ -216,7 +221,7 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name):
 
 @app.get("/graph")
 # def get_graph(credentials=Depends(check_credentials)):
-def get_graph():
+def get_graph(): # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
             "links": [
                 {
@@ -254,11 +259,10 @@ def get_graph():
     groups: Dict[str, int] = {}
 
     for node in nodes:
-        if (
-            not node.get("groupx")
-            or not node.get("groupy")
-            or (node["groupx"] == 11 and node["groupy"] == 11)
-        ):
+        if not node.get("groupx") or \
+           not node.get("groupy") or \
+           (node["groupx"] == 11 and node["groupy"] == 11):
+
             node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
 
         node["id"] = node["device_name"]
@@ -297,13 +301,13 @@ def get_graph():
                 logger.error(f"WARNING: Link discarded : {link}")
                 continue
 
+
             id_link = device + neigh
             id_link_neigh = neigh + device
 
             try:
-                speed = speeds[
-                    device + iface
-                ]  # "speed" in snmp terms is actually the max speed of the iface
+                speed = speeds[device + iface] # "speed" in snmp terms
+                                               # is actually the max speed of the iface
                 speed = speed * 1000000  # Convert speed to bits
                 highest_utilization = utilizations[device + iface]
                 percent_highest = highest_utilization / speed * 100
@@ -314,7 +318,8 @@ def get_graph():
                 speed = 1000000  # Can't determine speed
                 highest_utilization = 0  # Can't determine utilization
                 percent_highest = 0
-                # logger.error(f"Cant find speed for {device+iface} in {speeds}")
+                #logger.error(f"Cant find speed for {device+iface} in {speeds}")
+
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):
 
@@ -360,16 +365,16 @@ def get_graph():
                 # If we want to dissociate agg link into multilinks
                 # We have to handle "linknum"
                 # But for clarity on large topologies, this is commented out
-                # try:
+                #try:
                 #    f_link_2 = formatted_links[id_link].copy()
                 #    linknum = len(f_link_2["source_interfaces"])
                 #    id_link_2 = id_link + str(linknum)
-                # except KeyError:
+                #except KeyError:
                 #    f_link_2 = formatted_links[id_link_neigh].copy()
                 #    linknum = len(f_link_2["source_interfaces"])
                 #    id_link_2 = id_link_neigh + str(linknum)
 
-                # if linknum > 1:
+                #if linknum > 1:
                 #    f_link_2["linknum"] = linknum
                 #    f_link_2["highest_utilization"] = percent_highest
                 #    f_link_2["speed"] = speed
@@ -386,7 +391,7 @@ def get_graph():
 
 
 @app.get("/stats/")
-def stats(devices: List[str] = Query(None)):
+def stats(devices: List[str] = Query(None)): # pylint: disable=too-many-locals
     """
     {
         "ifDescr": "Ethernet0/0",
@@ -412,7 +417,8 @@ def stats(devices: List[str] = Query(None)):
             # if "iou" not in device:
             #    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-        # Not todo anymore :P if LEN stats_by_device = 2 -> find ifaces between the 2 devices to return only that
+        # Not todo anymore :P if LEN stats_by_device = 2
+        # -> find ifaces between the 2 devices to return only that
         # Would be needed if we disaggregated links again
 
         stats_by_device: Dict[str, Any] = get_from_db_or_cache(f"stats_by_device_{devices}")
@@ -453,10 +459,10 @@ def stats(devices: List[str] = Query(None)):
                     }
                 else:
                     # Must calculate speed. Not just adding in_bytes or it will only increase.
-                    # prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
-                    # prev_timestamp: int = int(
+                    #prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
+                    #prev_timestamp: int = int(
                     #    datetime.strptime(prev_date, "%y-%m-%d %H:%M:%S").timestamp()
-                    # )
+                    #)
 
                     interval = inttimestamp - prev_timestamp
                     if interval > 0:
@@ -478,9 +484,7 @@ def stats(devices: List[str] = Query(None)):
             CACHED_TIMEOUT[f"stats_by_device_{devices}"] = False
 
         return stats_by_device
-
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
 @app.get("/neighborships/")
@@ -574,13 +578,14 @@ def add_static_node(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Please specify at least node name or node ip",
         )
-    elif not node.name and node.addr:
+
+    if not node.name and node.addr:
         node.name = node.addr
 
     if not isinstance(node.ifaces, list):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Node with no ifaces")
-    else:
-        add_static_node_to_db(node, node_neighbors)
+
+    add_static_node_to_db(node, node_neighbors)
 
     return {"response": "Ok"}
 
