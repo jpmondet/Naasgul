@@ -30,6 +30,14 @@ mypy:
     - pip install mypy
     - mypy backend/ tests/ scripts/
 
+mypy_strict:
+  stage: tests
+  image: python:3.9.6-slim-buster
+  script:
+    - pip install mypy
+    - mypy --strict backend/ tests/ scripts/
+  allow_failure: true
+
 bandit:
   stage: tests
   image: python:3.9.6-slim-buster
