@@ -150,13 +150,12 @@ def lldp_scrapping(snmp_credentials, init_node_fqdn: str = ''):
             device = (INIT_NODE_FQDN, INIT_NODE_IP, int(INIT_NODE_PORT))
         elif INIT_NODE_IP:
             device = (INIT_NODE_IP, INIT_NODE_IP, int(INIT_NODE_PORT))
+        elif init_node_fqdn:
+            # This is a pytest case
+            device = (init_node_fqdn, '', 1161)
         else:
-            if init_node_fqdn:
-                # This is a pytest case
-                device = (init_node_fqdn, '', 1161)
-            else:
-                # Ok we certainly have fake datas
-                device = ("fake_local_device", "127.0.0.1", 1161)
+            # Ok we certainly have fake datas
+            device = ("fake_local_device", "127.0.0.1", 1161)
         devices.append(device)
 
     if STOP_NODES_FQDN:
