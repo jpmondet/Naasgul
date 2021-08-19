@@ -403,9 +403,9 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
 
 
 @app.get("/stats/")
-def stats(
+def stats(  # pylint: disable=too-many-locals
     devices: List[str] = Query(None),
-) -> Dict[str, Dict[str, Dict[str, Any]]]:  # pylint: disable=too-many-locals
+) -> Dict[str, Dict[str, Dict[str, Any]]]:
     """
     {
         "ifDescr": "Ethernet0/0",
@@ -607,6 +607,13 @@ def add_static_node(
 
     return {"response": "Ok"}
 
+@app.get("/healthz")
+def healthz() -> Dict[str, str]:
+    """Simple func to let kubernetes know that the api is alive"""
+
+    # Should maybe test access to the DB before answering 'OK'
+
+    return {"response": "Ok"}
 
 gunicorn_logger = logging.getLogger("gunicorn.info")
 logger.handlers = gunicorn_logger.handlers

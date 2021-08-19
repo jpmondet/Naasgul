@@ -36,9 +36,9 @@ TEST_CASE: Optional[str] = getenv("AUTOMAP_TEST_CASE")
 NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
 
 
-def dump_results_to_db(
+def dump_results_to_db(  # pylint: disable=too-many-locals
     device_name: str, ifaces_infos: List[Dict[str, str]]
-) -> None:  # pylint: disable=too-many-locals
+) -> None:
     """Format retrieved snmp datas & dumps them into db"""
     utilization_list: List[Tuple[Dict[str, str], Dict[str, str]]] = []
     stats_list: List[Dict[str, str]] = []
