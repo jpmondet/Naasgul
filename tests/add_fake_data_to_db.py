@@ -15,7 +15,7 @@ from pymongo.errors import DuplicateKeyError  # type: ignore
 
 spath.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
 # pylint:disable=import-error, wrong-import-position
-from db_layer import ( # type: ignore
+from db_layer import (
     prep_db_if_not_exist,
     get_latest_utilization,
 )

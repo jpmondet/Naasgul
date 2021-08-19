@@ -13,7 +13,7 @@ from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
 
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
 # pylint:disable=import-error, wrong-import-position
-from api_for_frontend import ( # type: ignore
+from api_for_frontend import (
     get_graph,
     stats,
     neighborships,
@@ -22,18 +22,18 @@ from api_for_frontend import ( # type: ignore
     add_static_node,
     delete_node_by_fqdn,
 )
-from db_layer import prep_db_if_not_exist, get_node # type: ignore
+from db_layer import prep_db_if_not_exist, get_node
 
 
-TEST_GRAPH_DATA: Dict[str, Any] = {}
+TEST_GRAPH_DATA: Dict[str, List[Dict[str, Any]]] = {}
 with open("tests/graph_datas.json") as graph_datas:
     TEST_GRAPH_DATA = json.load(graph_datas)
 
-TEST_STATS_DATA: Dict[str, Any] = {}
+TEST_STATS_DATA: Dict[str, Dict[str, Dict[str, Any]]] = {}
 with open("tests/stats_datas.json") as stats_datas:
     TEST_STATS_DATA = json.load(stats_datas)
 
-TEST_NEIGHS_DATA: Dict[str , Any] = {}
+TEST_NEIGHS_DATA: List[Dict[str, str]] = []
 with open("tests/neighs_datas.json") as neighs_datas:
     TEST_NEIGHS_DATA = json.load(neighs_datas)
 
@@ -46,7 +46,7 @@ def test_graph_nodes() -> None:
     prep_db_if_not_exist()
     add_fake_datas(12, 5, False, False)
 
-    graph = get_graph()
+    graph: Dict[str, List[Dict[str, Any]]] = get_graph()
     assert graph["nodes"] == TEST_GRAPH_DATA["nodes"]
 
 
@@ -57,9 +57,15 @@ def test_graph_links() -> None:
     prep_db_if_not_exist()
     add_fake_datas(12, 5, False, False)
 
-    graph = get_graph()
-    sorted_links = sorted(graph["links"], key=lambda d: (d["source"], d["target"]))
-    sorted_test_links = sorted(TEST_GRAPH_DATA["links"], key=lambda d: (d["source"], d["target"]))
+    graph: Dict[str, List[Dict[str, Any]]] = get_graph()
+    sorted_links: List[Dict[str, Any]]  = sorted(
+        graph["links"],
+        key=lambda d: (d["source"], d["target"])
+    )
+    sorted_test_links: List[Dict[str, Any]] = sorted(
+        TEST_GRAPH_DATA["links"],
+        key=lambda d: (d["source"], d["target"])
+    )
     assert sorted_links == sorted_test_links
 
 
@@ -70,15 +76,13 @@ def test_stats_of_link_between_2_devices() -> None:
     prep_db_if_not_exist()
     add_fake_datas(12, 5, False, False)
 
-    query = ["fake_device_stage1_1", "fake_device_stage1_2"]
-    stats_retrieved = stats(query)
+    query: List[str] = ["fake_device_stage1_1", "fake_device_stage1_2"]
+    stats_retrieved: Dict[str, Dict[str, Dict[str, Any]]] = stats(query)
     # Cant check timestamp since test datas in json are static
     for device_datas in stats_retrieved.values():
         for iface_datas in device_datas.values():
             for stat in iface_datas["stats"]:
                 stat["time"] = "N/A"
-
-    print(json.dumps(stats_retrieved))
     assert stats_retrieved == TEST_STATS_DATA
 
 
@@ -89,17 +93,14 @@ def test_stats_of_1_device() -> None:
     prep_db_if_not_exist()
     add_fake_datas(12, 5, False, False)
 
-    query = ["fake_device_stage1_1"]
-    stats_retrieved = stats(query)
+    query: List[str] = ["fake_device_stage1_1"]
+    stats_retrieved: Dict[str, Dict[str, Dict[str, Any]]] = stats(query)
     # Cant check timestamp since test datas in json are static
     for device_datas in stats_retrieved.values():
         for iface_datas in device_datas.values():
             for stat in iface_datas["stats"]:
                 stat["time"] = "N/A"
-
-    print(json.dumps(stats_retrieved))
-
-    test_datas_to_match = {
+    test_datas_to_match: Dict[str, Dict[str, Dict[str, Any]]] = {
         "fake_device_stage1_1": {
             "1/1": {
                 "ifDescr": "1/1",
@@ -134,7 +135,7 @@ def test_stats_bad_request_not_list() -> None:
     add_fake_datas(12, 5, False, False)
 
     # Query should be a list
-    query = "fake_device_stage1_1"
+    query: str = "fake_device_stage1_1"
     with pytest.raises(HTTPException):
         _ = stats(query) # type: ignore
 
@@ -148,7 +149,7 @@ def test_stats_bad_request_not_str_list() -> None:
     add_fake_datas(12, 5, False, False)
 
     # Query should be a list of str
-    query = [1]
+    query: List[int] = [1]
     with pytest.raises(HTTPException):
         _ = stats(query) # type: ignore
 
@@ -159,10 +160,9 @@ def test_neighborships() -> None:
     prep_db_if_not_exist()
     add_fake_datas(12, 5, False, False)
 
-    query = "fake_device_stage1_1"
+    query: str = "fake_device_stage1_1"
 
-    neighs = neighborships(query)
-    print(json.dumps(neighs))
+    neighs: List[Dict[str, str]] = neighborships(query)
 
     assert neighs == TEST_NEIGHS_DATA
 
@@ -175,7 +175,7 @@ def test_neighborships_bad_request_with_int() -> None:
     add_fake_datas(12, 5, False, False)
 
     # Query should be a str
-    query = 1
+    query: int = 1
     with pytest.raises(HTTPException):
         _ = neighborships(query) # type: ignore
 
@@ -188,7 +188,7 @@ def test_neighborships_bad_request_with_list() -> None:
     add_fake_datas(12, 5, False, False)
 
     # Query should be a str
-    query = ["test"]
+    query: List[str] = ["test"]
     with pytest.raises(HTTPException):
         _ = neighborships(query) # type: ignore
 
@@ -205,7 +205,7 @@ def test_add_static_node_no_ifaces() -> None:
 
     node_neighbors: List[Neighbor] = [neigh]
 
-    creds = HTTPBasicCredentials(username="user", password="pass")
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
 
     with pytest.raises(HTTPException):
         add_static_node(node, node_neighbors, creds)
@@ -222,7 +222,7 @@ def test_add_static_node_wrong_creds() -> None:
 
     node_neighbors: List[Neighbor] = [neigh]
 
-    creds = HTTPBasicCredentials(username="user1", password="pass")
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user1", password="pass")
 
     add_static_node(node, node_neighbors, creds)
 
@@ -238,7 +238,7 @@ def test_add_static_node() -> None:
 
     node_neighbors: List[Neighbor] = [neigh]
 
-    creds = HTTPBasicCredentials(username="user", password="pass")
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
 
     add_static_node(node, node_neighbors, creds)
 
@@ -252,7 +252,7 @@ def test_delete_node_by_fqdn() -> None:
 
     node_name: str = "test_static"
 
-    creds = HTTPBasicCredentials(username="user", password="pass")
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
 
     delete_node_by_fqdn(creds, node_name)
 

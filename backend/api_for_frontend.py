@@ -401,7 +401,7 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
 
 
 @app.get("/stats/")
-def stats(devices: List[str] = Query(None)) -> Dict[str, Any]: # pylint: disable=too-many-locals
+def stats(devices: List[str] = Query(None)) -> Dict[str, Dict[str, Dict[str, Any]]]: # pylint: disable=too-many-locals
     """
     {
         "ifDescr": "Ethernet0/0",
