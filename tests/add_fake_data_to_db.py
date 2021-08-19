@@ -24,6 +24,7 @@ DB_STRING: str = getenv("DB_STRING", "mongodb://localhost:27017/")
 client = MongoClient(DB_STRING)
 db = client.automapping
 
+
 def add_lots_of_nodes(number_nodes: int, fabric_stages: int) -> None:
     """Inserts or Updates number_nodes devices into db
     (nodes collection)"""
@@ -84,10 +85,7 @@ def add_iface_utilization(
 
 
 def add_iface_stats(
-    device_name: str,
-    iface_name: str,
-    iface_bytes: int,
-    previous_utilization: int
+    device_name: str, iface_name: str, iface_bytes: int, previous_utilization: int
 ) -> None:
     """Inserts fake iface stats to a specific
     interface into db (stats collection)"""
@@ -117,10 +115,11 @@ def add_iface_stats(
         }
     )
 
+
 # pylint: disable=too-many-locals
 def add_lots_of_links(
     number_nodes: int, fabric_stages: int, stats_only: bool = False, random_bytes: bool = True
-) -> None :
+) -> None:
     """Calculates and adds all the links needed so the topo looks like a fabric"""
 
     node_number: int = 0
@@ -179,6 +178,7 @@ def add_lots_of_links(
                 )
 
             node_number += node_increment
+
 
 def add_fake_datas(
     nb_nodes: int, fabric_stages: int, add_stats_only: bool = False, random_bytes: bool = True

@@ -43,11 +43,11 @@ NEEDED_MIBS_FOR_LLDP: Dict[str, str] = {
 def get_snmp_creds(
     snmp_user: Optional[str] = "public",
     snmp_auth_pwd: Optional[str] = None,
-    snmp_priv_pwd: Optional[str] = None
-) -> Union[hlapi.CommunityData,hlapi.UsmUserData]:
+    snmp_priv_pwd: Optional[str] = None,
+) -> Union[hlapi.CommunityData, hlapi.UsmUserData]:
     """Returns snmp v2 or v3 pysnmp credentials depending on parameters"""
 
-    snmpv2_user: str = ''
+    snmpv2_user: str = ""
 
     if snmp_user and snmp_auth_pwd and snmp_priv_pwd:
         return get_snmp_v3_creds(snmp_user, snmp_auth_pwd, snmp_priv_pwd)
@@ -99,9 +99,8 @@ def cast(value: Any) -> Any:
 
 
 def fetch(
-    handler: Iterator[Tuple[str, str ,int, Tuple[str, Any]]],
-    count: Optional[int] = 1000
-) -> List[Dict[str,str]]:
+    handler: Iterator[Tuple[str, str, int, Tuple[str, Any]]], count: Optional[int] = 1000
+) -> List[Dict[str, str]]:
     """Actually getting snmp values from a device and
     returns a list of the results retrieved"""
     result: List[Dict[str, str]] = []
@@ -127,11 +126,11 @@ def get_table(
     credentials: Union[hlapi.CommunityData, hlapi.UsmUserData],
     port: int = 161,
     engine: hlapi.SnmpEngine = hlapi.SnmpEngine(),
-    context: hlapi.ContextData = hlapi.ContextData()
+    context: hlapi.ContextData = hlapi.ContextData(),
 ) -> List[Dict[str, str]]:
     """Prepares the handler to fetch snmp oids as a table
     and returns the actual values return by fetch"""
-    handler: Iterator[Tuple[str, str ,int, Tuple[str, Any]]] = hlapi.nextCmd(
+    handler: Iterator[Tuple[str, str, int, Tuple[str, Any]]] = hlapi.nextCmd(
         engine,
         credentials,
         hlapi.UdpTransportTarget((target, port)),
@@ -148,11 +147,11 @@ def get(
     credentials: Union[hlapi.CommunityData, hlapi.UsmUserData],
     port: int = 161,
     engine: hlapi.SnmpEngine = hlapi.SnmpEngine(),
-    context: hlapi.ContextData = hlapi.ContextData()
+    context: hlapi.ContextData = hlapi.ContextData(),
 ) -> Dict[str, Any]:
     """Prepares the handler to fetch snmp oids and
     returns the actual values return by fetch"""
-    handler: Iterator[Tuple[str, str ,int, Tuple[str, Any]]] = hlapi.getCmd(
+    handler: Iterator[Tuple[str, str, int, Tuple[str, Any]]] = hlapi.getCmd(
         engine,
         credentials,
         hlapi.UdpTransportTarget((target, port)),
@@ -170,11 +169,11 @@ def get_bulk(
     start_from: int = 0,
     port: int = 161,
     engine: hlapi.SnmpEngine = hlapi.SnmpEngine(),
-    context: hlapi.ContextData = hlapi.ContextData()
+    context: hlapi.ContextData = hlapi.ContextData(),
 ) -> List[Dict[str, str]]:
     """Prepares the handler to fetch snmp oids with a bulk
     cmd and returns the actual values return by fetch"""
-    handler: Iterator[Tuple[str, str ,int, Tuple[str, Any]]] = hlapi.bulkCmd(
+    handler: Iterator[Tuple[str, str, int, Tuple[str, Any]]] = hlapi.bulkCmd(
         engine,
         credentials,
         hlapi.UdpTransportTarget((target, port)),
@@ -194,7 +193,7 @@ def get_bulk_auto(
     start_from: int = 0,
     port: int = 161,
     engine: hlapi.SnmpEngine = hlapi.SnmpEngine(),
-    context: hlapi.ContextData = hlapi.ContextData()
+    context: hlapi.ContextData = hlapi.ContextData(),
 ) -> List[Dict[str, str]]:
     """Basically tries to automate get_bulk by discovering how much
     we have to count with a 'count_oid'"""

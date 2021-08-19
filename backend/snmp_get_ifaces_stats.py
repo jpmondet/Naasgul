@@ -36,15 +36,17 @@ TEST_CASE: Optional[str] = getenv("AUTOMAP_TEST_CASE")
 NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
 
 
-def dump_results_to_db(device_name: str, ifaces_infos: List[Dict[str, str]]) -> None:  # pylint: disable=too-many-locals
+def dump_results_to_db(
+    device_name: str, ifaces_infos: List[Dict[str, str]]
+) -> None:  # pylint: disable=too-many-locals
     """Format retrieved snmp datas & dumps them into db"""
     utilization_list: List[Tuple[Dict[str, str], Dict[str, str]]] = []
     stats_list: List[Dict[str, str]] = []
     for iface in ifaces_infos:
-        ifname: str = ''
+        ifname: str = ""
         _, ifname = next(search(iface, f"{NEEDED_MIBS['iface_name']}*", yielded=True))
         ifname = str(ifname).lower()
-        if ( # pylint: disable=too-many-boolean-expressions
+        if (  # pylint: disable=too-many-boolean-expressions
             ifname.startswith("se")
             or ifname.startswith("nu")
             or ifname.startswith("lo")
@@ -55,7 +57,7 @@ def dump_results_to_db(device_name: str, ifaces_infos: List[Dict[str, str]]) -> 
         ):
             # To do: Mgmt ifaces/lo & po could actually be interesting... Need to think about this
             continue
-        ifalias: str = ''
+        ifalias: str = ""
         _, ifalias = next(search(iface, f"{NEEDED_MIBS['iface_alias']}*", yielded=True))
         # if not ifalias:
         #    # We won't get stats of ifaces with no description
@@ -81,8 +83,8 @@ def dump_results_to_db(device_name: str, ifaces_infos: List[Dict[str, str]]) -> 
             "mtu": int(mtu),
             "mac": hexlify(mac.encode()).decode(),
             "speed": int(speed),
-            "in_discards": int(in_disc) % (2 ** 64 - 1), # There are some weird devices
-                                                         # returning values greater than 2**64...
+            "in_discards": int(in_disc) % (2 ** 64 - 1),  # There are some weird devices
+            # returning values greater than 2**64...
             "in_errors": int(in_err) % (2 ** 64 - 1),
             "out_discards": int(out_disc) % (2 ** 64 - 1),
             "out_errors": int(out_err) % (2 ** 64 - 1),
@@ -131,14 +133,15 @@ def dump_results_to_db(device_name: str, ifaces_infos: List[Dict[str, str]]) -> 
     except OverflowError:
         print("OverflowError 0_o (int longer than 64bit) : " + str(utilization_list))
 
+
 # pylint: disable=too-many-arguments
 async def get_stats_and_dump(
     target_name: str,
     oids: List[str],
-    credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
+    credentials: Union[hlapi.CommunityData, hlapi.UsmUserData],
     count_oid: str,
-    target_ip: Optional[str]=None,
-    port: int=161
+    target_ip: Optional[str] = None,
+    port: int = 161,
 ) -> None:
     """Using snmp to get iface(stats) infos & dumping them into db by calling dump_results_to_db"""
 
@@ -152,8 +155,7 @@ async def get_stats_and_dump(
 
 
 def stats_scrapping(
-    snmp_credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
-    init_node_fqdn: str = ""
+    snmp_credentials: Union[hlapi.CommunityData, hlapi.UsmUserData], init_node_fqdn: str = ""
 ) -> None:
     """Main ifaces(stats) scrapping func that launch threads to scrap
     devices"""
@@ -174,11 +176,11 @@ def stats_scrapping(
         for devices_to_scrap in split_list(devices, int(NB_THREADS)):
             loop = asyncio.get_event_loop()
             loop.run_until_complete(
-                asyncio.wait( # type: ignore
+                asyncio.wait(  # type: ignore
                     [
                         get_stats_and_dump(
                             hostname,
-                            NEEDED_MIBS.values(), # type: ignore
+                            NEEDED_MIBS.values(),  # type: ignore
                             snmp_credentials,
                             IFACES_TABLE_TO_COUNT,
                             target_ip=ip,

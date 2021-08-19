@@ -52,7 +52,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
 
     for lldp_nei in lldp_infos:
         # Getting neigh node infos and adding it to nodes_list
-        neigh_name: str = ''
+        neigh_name: str = ""
         _, neigh_name = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_name']}*", yielded=True))
         neigh_name = neigh_name.lower()
         if not neigh_name or neigh_name in ["null", "localhost.localdomain"]:
@@ -61,7 +61,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
             continue
 
         # IP is a lil' special since it is written in the oid (yeah weird)
-        neigh_ip_oid: str = ''
+        neigh_ip_oid: str = ""
         neigh_ip_oid, _ = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_ip']}*", yielded=True))
         neigh_ip: str = ".".join(neigh_ip_oid.split(".")[-4:])
 
@@ -100,7 +100,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
 
         links_list.append((query_link, query_link))
 
-        query_neigh_link: Dict[str,str] = {
+        query_neigh_link: Dict[str, str] = {
             "device_name": neigh_name,
             "iface_name": neigh_iface,
             "neighbor_name": dev_name,
@@ -118,9 +118,9 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
 async def get_device_lldp_infos(
     target_name: str,
     oids: List[str],
-    credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
-    target_ip: Optional[str]=None,
-    port: int=161
+    credentials: Union[hlapi.CommunityData, hlapi.UsmUserData],
+    target_ip: Optional[str] = None,
+    port: int = 161,
 ) -> None:
     """Using snmp to get lldp infos & dumping them into db by calling dump_results_to_db"""
 
@@ -135,8 +135,7 @@ async def get_device_lldp_infos(
 
 
 def lldp_scrapping(
-    snmp_credentials: Union[hlapi.CommunityData,hlapi.UsmUserData],
-    init_node_fqdn: str = ""
+    snmp_credentials: Union[hlapi.CommunityData, hlapi.UsmUserData], init_node_fqdn: str = ""
 ) -> None:
     """Main lldp scrapping func that launch threads to scrap
     devices"""
@@ -180,14 +179,14 @@ def lldp_scrapping(
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            asyncio.wait( # type: ignore
+            asyncio.wait(  # type: ignore
                 [
                     get_device_lldp_infos(
                         hostname,
-                        NEEDED_MIBS.values(), # type: ignore
+                        NEEDED_MIBS.values(),  # type: ignore
                         snmp_credentials,
                         target_ip=ip,
-                        port=port
+                        port=port,
                     )
                     for hostname, ip, port in devices_to_scrap
                 ]

@@ -98,8 +98,8 @@ class Neighbor(BaseModel):
 
 
 def check_credentials(
-        credentials: HTTPBasicCredentials = Depends(security)
-    ) -> HTTPBasicCredentials:
+    credentials: HTTPBasicCredentials = Depends(security),
+) -> HTTPBasicCredentials:
     """Checks credentials on api calls"""
     correct_username: bool = compare_digest(credentials.username, API_USER)
     correct_password: bool = compare_digest(credentials.password, API_PASS)
@@ -113,10 +113,8 @@ def check_credentials(
 
 
 def get_from_db_or_cache(
-        element: str,
-        func: Optional[Callable[..., Any]] = None,
-        query: str = ''
-    ) -> Any:
+    element: str, func: Optional[Callable[..., Any]] = None, query: str = ""
+) -> Any:
     """Cache most db calls if they are not already cached.
     Also handles a timeout to retrieve from db from time to time"""
     global CACHE, CACHED_TIMEOUT
@@ -178,8 +176,9 @@ def add_static_node_to_db(node: Node, neigh_infos: Optional[List[Neighbor]] = No
             add_fake_iface_stats(node.name, iface)
             add_fake_iface_utilization(node.name, iface)
 
+
 def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tuple[int, int]:
-    """ Tries to find to which groups the node should be affected
+    """Tries to find to which groups the node should be affected
     groupx is conditioned by the function of the device (if it's a core device
     for example) and groupy is conditioned by its localisation.
 
@@ -188,8 +187,12 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tupl
     # Exemple for a device named sw1.iou
     # We assume that 'sw' is the function and '1' its localisation (yeah
     # not really a localisation but well, it's an example ;-) )
-    regex_pattern: re.Pattern[str] = re.compile("^([a-z]{2})([0-9]+).*", re.IGNORECASE) # pylint: disable=unsubscriptable-object
-    matched: Optional[re.Match[str]] = regex_pattern.match(node_name) # pylint: disable=unsubscriptable-object
+    regex_pattern: re.Pattern[str] = re.compile(
+        "^([a-z]{2})([0-9]+).*", re.IGNORECASE
+    )  # pylint: disable=unsubscriptable-object
+    matched: Optional[re.Match[str]] = regex_pattern.match(
+        node_name
+    )  # pylint: disable=unsubscriptable-object
     if not matched:
         # It may be a "fake" node with a "fake" name:
         regex_pattern = re.compile("^fake_device_stage([0-9]+)_([0-9]+)$", re.IGNORECASE)
@@ -266,9 +269,11 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
     groups: Dict[str, int] = {}
 
     for node in nodes:
-        if not node.get("groupx") or \
-           not node.get("groupy") or \
-           (node["groupx"] == 11 and node["groupy"] == 11):
+        if (
+            not node.get("groupx")
+            or not node.get("groupy")
+            or (node["groupx"] == 11 and node["groupy"] == 11)
+        ):
 
             node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
 
@@ -290,9 +295,8 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
         formatted_links = {}
 
         utilizations: Dict[str, int] = get_from_db_or_cache(
-                                           "utilizations",
-                                           get_all_highest_utilizations
-                                       )
+            "utilizations", get_all_highest_utilizations
+        )
         speeds: Dict[str, int] = get_from_db_or_cache("speeds", get_all_speeds)
 
         # logger.error("Utilizations: " + str(utilizations))
@@ -311,13 +315,12 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
                 logger.error(f"WARNING: Link discarded : {link}")
                 continue
 
-
             id_link: str = device + neigh
             id_link_neigh: str = neigh + device
 
             try:
-                speed: int = speeds[device + iface] # "speed" in snmp terms
-                                               # is actually the max speed of the iface
+                speed: int = speeds[device + iface]  # "speed" in snmp terms
+                # is actually the max speed of the iface
                 speed = speed * 1000000  # Convert speed to bits
                 highest_utilization: int = utilizations[device + iface]
                 percent_highest: float = highest_utilization / speed * 100
@@ -329,7 +332,6 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
                 highest_utilization = 0  # Can't determine utilization
                 percent_highest = 0.0
                 logger.error(f"Cant find speed for {device+iface} in {speeds}")
-
 
             if not formatted_links.get(id_link) and not formatted_links.get(id_link_neigh):
 
@@ -375,16 +377,16 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
                 # If we want to dissociate agg link into multilinks
                 # We have to handle "linknum"
                 # But for clarity on large topologies, this is commented out
-                #try:
+                # try:
                 #    f_link_2 = formatted_links[id_link].copy()
                 #    linknum = len(f_link_2["source_interfaces"])
                 #    id_link_2 = id_link + str(linknum)
-                #except KeyError:
+                # except KeyError:
                 #    f_link_2 = formatted_links[id_link_neigh].copy()
                 #    linknum = len(f_link_2["source_interfaces"])
                 #    id_link_2 = id_link_neigh + str(linknum)
 
-                #if linknum > 1:
+                # if linknum > 1:
                 #    f_link_2["linknum"] = linknum
                 #    f_link_2["highest_utilization"] = percent_highest
                 #    f_link_2["speed"] = speed
@@ -401,7 +403,9 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
 
 
 @app.get("/stats/")
-def stats(devices: List[str] = Query(None)) -> Dict[str, Dict[str, Dict[str, Any]]]: # pylint: disable=too-many-locals
+def stats(
+    devices: List[str] = Query(None),
+) -> Dict[str, Dict[str, Dict[str, Any]]]:  # pylint: disable=too-many-locals
     """
     {
         "ifDescr": "Ethernet0/0",
@@ -469,10 +473,10 @@ def stats(devices: List[str] = Query(None)) -> Dict[str, Dict[str, Dict[str, Any
                     }
                 else:
                     # Must calculate speed. Not just adding in_bytes or it will only increase.
-                    #prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
-                    #prev_timestamp: int = int(
+                    # prev_date = stats_by_device[dname][ifname]["stats"][-1]["time"]
+                    # prev_timestamp: int = int(
                     #    datetime.strptime(prev_date, "%y-%m-%d %H:%M:%S").timestamp()
-                    #)
+                    # )
 
                     interval: int = inttimestamp - prev_timestamp
                     if interval > 0:
@@ -558,7 +562,9 @@ def neighborships(
 
 @app.get("/delete_node_by_fqdn")
 def delete_node_by_fqdn(
-    credentials: HTTPBasicCredentials=Depends(check_credentials),  # pylint: disable=unused-argument
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
     node_name_or_ip: str = Query(
         ..., min_length=4, max_length=50
     ),  # , regex="^[a-z]{2,3}[0-9]{1}.iou$")
@@ -577,7 +583,9 @@ def delete_node_by_fqdn(
 def add_static_node(
     node: Node,
     node_neighbors: Optional[List[Neighbor]] = None,
-    credentials: HTTPBasicCredentials=Depends(check_credentials),  # pylint: disable=unused-argument
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
 ) -> Dict[str, str]:
     """Adds a node to the DB (static nodes that aren't lldp-discoverable)
     (see in scripts/add_non_lldp_device.py for the original script, it may be easier to use

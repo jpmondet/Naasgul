@@ -58,13 +58,11 @@ def test_graph_links() -> None:
     add_fake_datas(12, 5, False, False)
 
     graph: Dict[str, List[Dict[str, Any]]] = get_graph()
-    sorted_links: List[Dict[str, Any]]  = sorted(
-        graph["links"],
-        key=lambda d: (d["source"], d["target"])
+    sorted_links: List[Dict[str, Any]] = sorted(
+        graph["links"], key=lambda d: (d["source"], d["target"])
     )
     sorted_test_links: List[Dict[str, Any]] = sorted(
-        TEST_GRAPH_DATA["links"],
-        key=lambda d: (d["source"], d["target"])
+        TEST_GRAPH_DATA["links"], key=lambda d: (d["source"], d["target"])
     )
     assert sorted_links == sorted_test_links
 
@@ -137,7 +135,7 @@ def test_stats_bad_request_not_list() -> None:
     # Query should be a list
     query: str = "fake_device_stage1_1"
     with pytest.raises(HTTPException):
-        _ = stats(query) # type: ignore
+        _ = stats(query)  # type: ignore
 
 
 def test_stats_bad_request_not_str_list() -> None:
@@ -151,7 +149,7 @@ def test_stats_bad_request_not_str_list() -> None:
     # Query should be a list of str
     query: List[int] = [1]
     with pytest.raises(HTTPException):
-        _ = stats(query) # type: ignore
+        _ = stats(query)  # type: ignore
 
 
 def test_neighborships() -> None:
@@ -177,7 +175,7 @@ def test_neighborships_bad_request_with_int() -> None:
     # Query should be a str
     query: int = 1
     with pytest.raises(HTTPException):
-        _ = neighborships(query) # type: ignore
+        _ = neighborships(query)  # type: ignore
 
 
 def test_neighborships_bad_request_with_list() -> None:
@@ -190,7 +188,7 @@ def test_neighborships_bad_request_with_list() -> None:
     # Query should be a str
     query: List[str] = ["test"]
     with pytest.raises(HTTPException):
-        _ = neighborships(query) # type: ignore
+        _ = neighborships(query)  # type: ignore
 
 
 def test_add_static_node_no_ifaces() -> None:

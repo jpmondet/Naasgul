@@ -162,7 +162,7 @@ def test_bulk_update_collection() -> None:
         "last_utilization": last_utilization,
         "timestamp": timestamp,
     }
-    utilization_list: List[Tuple[Dict[str,str],Dict[str, Any]]] = [(query, utilization)]
+    utilization_list: List[Tuple[Dict[str, str], Dict[str, Any]]] = [(query, utilization)]
 
     bulk_update_collection(UTILIZATION_COLLECTION, utilization_list)
 

@@ -58,7 +58,7 @@ def prep_db_if_not_exist() -> None:
     UTILIZATION_COLLECTION.create_index([("device_name", 1), ("iface_name", 1)], unique=True)
 
 
-def get_entire_collection(mongodb_collection) -> List[Dict[str, Any]]: # type: ignore
+def get_entire_collection(mongodb_collection) -> List[Dict[str, Any]]:  # type: ignore
     """Returns the entire collection passed in parameter as a list"""
     return list(mongodb_collection.find({}))
 
@@ -70,12 +70,13 @@ def get_all_nodes() -> Iterable[Dict[str, Any]]:
 
 def get_node(node_name: str) -> Dict[str, Any]:
     """Returns a single exact node from the db"""
-    return NODES_COLLECTION.find_one({"device_name": node_name}) # type: ignore
+    return NODES_COLLECTION.find_one({"device_name": node_name})  # type: ignore
 
 
 def get_all_links() -> Iterable[Dict[str, Any]]:
     """Returns all links as an iterator"""
     return get_entire_collection(LINKS_COLLECTION)
+
 
 def get_all_highest_utilizations() -> Dict[str, int]:
     """Calculates and returns all highest links utilizations
@@ -134,14 +135,14 @@ def get_links_device(device: str) -> List[Dict[str, Any]]:
     at links on which this device is appearing as a neighbor)"""
 
     query: List[Dict[str, str]] = [{"device_name": device}, {"neighbor_name": device}]
-    return LINKS_COLLECTION.find({"$or": query}) # type: ignore
+    return LINKS_COLLECTION.find({"$or": query})  # type: ignore
 
 
 def get_stats_devices(devices: List[str]) -> Iterable[Dict[str, Any]]:
     """Returns all stats of all devices passed in parameter"""
 
     query: List[Dict[str, str]] = [{"device_name": device} for device in devices]
-    return STATS_COLLECTION.find({"$or": query}) # type: ignore
+    return STATS_COLLECTION.find({"$or": query})  # type: ignore
 
 
 def get_speed_iface(device_name: str, iface_name: str) -> int:
@@ -178,7 +179,7 @@ def add_node(
     node_name: str,
     groupx: Optional[int] = 11,
     groupy: Optional[int] = 11,
-    image: Optional[str] = "router.png"
+    image: Optional[str] = "router.png",
 ) -> None:
     """Inserts (or updates) a node into db"""
 
@@ -260,7 +261,7 @@ def add_fake_iface_stats(device_name: str, iface_name: str) -> None:
     )
 
 
-def bulk_update_collection(mongodb_collection, list_tuple_key_query) -> None: # type: ignore
+def bulk_update_collection(mongodb_collection, list_tuple_key_query) -> None:  # type: ignore
     """Update massively a collection. It uses the special 'UpdateMany'
     pymongo object :
     # (https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html\
