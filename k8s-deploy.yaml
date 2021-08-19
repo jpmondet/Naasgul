@@ -68,12 +68,54 @@ spec:
           periodSeconds: 3
           ports:
             - containerPort: 80
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - effect: NoSchedule
-        key: node.kubernetes.io/not-ready
-        operator: Exists
-      - effect: NoSchedule
-        key: node.kubernetes.io/unschedulable
-        operator: Exists
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: naasgul_topo_scrapper
+  namespace: naasgul
+  labels:
+    k8s-app: naasgul_topo_scrapper
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      k8s-app: naasgul_topo_scrapper
+  template:
+    metadata:
+      labels:
+        k8s-app: naasgul_topo_scrapper
+    spec:
+      containers:
+      - name: naasgul
+        image: naasgul_topo_scrapper_snmp:latest
+        #args: ["/naasgul"]
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DB_STRING
+          value: "mongodb://mongodb:27017/"
+        - name: LLDP_INIT_NODE_FQDN
+          value: "" # CI_VAR to add here
+        - name: LLDP_INIT_NODE_IP
+          value: "" # CI_VAR to add here
+        - name: LLDP_INIT_NODE_PORT=161
+          value: "" # CI_VAR to add here
+        - name: LLDP_STOP_NODES_FQDN=
+          value: "" # CI_VAR to add here
+        - name: LLDP_STOP_NODES_IP=
+          value: "" # CI_VAR to add here
+        - name: SNMP_USER
+          valueFrom:
+          secretKeyRef:
+            name: snmp_user
+            key: snmp_user
+        - name: SNMP_AUTH_PWD
+          valueFrom:
+          secretKeyRef:
+            name: snmp_auth_pwd
+            key: snmp_auth_pwd
+        - name: SNMP_PRIV_PWD
+          valueFrom:
+          secretKeyRef:
+            name: snmp_priv_pwd
+            key: snmp_priv_pwd
