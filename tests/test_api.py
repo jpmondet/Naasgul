@@ -136,7 +136,7 @@ def test_stats_bad_request_not_list() -> None:
     # Query should be a list
     query = "fake_device_stage1_1"
     with pytest.raises(HTTPException):
-        _ = stats(query)
+        _ = stats(query) # type: ignore
 
 
 def test_stats_bad_request_not_str_list() -> None:
@@ -150,7 +150,7 @@ def test_stats_bad_request_not_str_list() -> None:
     # Query should be a list of str
     query = [1]
     with pytest.raises(HTTPException):
-        _ = stats(query)
+        _ = stats(query) # type: ignore
 
 
 def test_neighborships() -> None:
@@ -177,7 +177,7 @@ def test_neighborships_bad_request_with_int() -> None:
     # Query should be a str
     query = 1
     with pytest.raises(HTTPException):
-        _ = neighborships(query)
+        _ = neighborships(query) # type: ignore
 
 
 def test_neighborships_bad_request_with_list() -> None:
@@ -190,7 +190,7 @@ def test_neighborships_bad_request_with_list() -> None:
     # Query should be a str
     query = ["test"]
     with pytest.raises(HTTPException):
-        _ = neighborships(query)
+        _ = neighborships(query) # type: ignore
 
 
 def test_add_static_node_no_ifaces() -> None:
