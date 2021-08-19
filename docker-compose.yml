@@ -36,9 +36,15 @@ services:
     - ${REPO_PATH}/.snmp
     environment:
     - DB_STRING=mongodb://mongodb:27017/
-  apache:  
-    image: "httpd:2.4"
-    volumes:
-    - ${REPO_PATH}/frontend/public-html/:/usr/local/apache2/htdocs/
-    ports: 
+#  apache:  
+#    image: "httpd:2.4"
+#    volumes:
+#    - ${REPO_PATH}/frontend/public-html/:/usr/local/apache2/htdocs/
+#    ports: 
+#    - 8080:80
+  frontend:
+    build:
+      context: ${REPO_PATH}/frontend/
+      dockerfile: Dockerfile
+    ports:
     - 8080:80
