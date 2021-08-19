@@ -63,11 +63,11 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 20244
+            port: 80
           initialDelaySeconds: 10
           periodSeconds: 3
-          ports:
-            - containerPort: 80
+        ports:
+          - containerPort: 80
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -109,6 +109,9 @@ spec:
           secretKeyRef:
             name: snmp_user
             key: snmp_user
+          # kubectl create secret generic db-user-pass \
+          #         --from-literal=username=devuser \
+          #         --from-literal=password='S!B\*d$zDsb='
         - name: SNMP_AUTH_PWD
           valueFrom:
           secretKeyRef:
@@ -160,3 +163,34 @@ spec:
           secretKeyRef:
             name: snmp_priv_pwd
             key: snmp_priv_pwd
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: naasgul_frontend
+  namespace: naasgul
+  labels:
+    k8s-app: naasgul_frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      k8s-app: naasgul_frontend
+  template:
+    metadata:
+      labels:
+        k8s-app: naasgul_frontend
+    spec:
+      containers:
+      - name: naasgul
+        image: naasgul_frontend:latest
+        #args: ["/naasgul"]
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 3
+        ports:
+          - containerPort: 80
