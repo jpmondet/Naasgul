@@ -77,7 +77,7 @@ metadata:
   labels:
     k8s-app: naasgul_topo_scrapper
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       k8s-app: naasgul_topo_scrapper
@@ -104,6 +104,47 @@ spec:
           value: "" # CI_VAR to add here
         - name: LLDP_STOP_NODES_IP=
           value: "" # CI_VAR to add here
+        - name: SNMP_USER
+          valueFrom:
+          secretKeyRef:
+            name: snmp_user
+            key: snmp_user
+        - name: SNMP_AUTH_PWD
+          valueFrom:
+          secretKeyRef:
+            name: snmp_auth_pwd
+            key: snmp_auth_pwd
+        - name: SNMP_PRIV_PWD
+          valueFrom:
+          secretKeyRef:
+            name: snmp_priv_pwd
+            key: snmp_priv_pwd
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: naasgul_stats_scrapper
+  namespace: naasgul
+  labels:
+    k8s-app: naasgul_stats_scrapper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: naasgul_stats_scrapper
+  template:
+    metadata:
+      labels:
+        k8s-app: naasgul_stats_scrapper
+    spec:
+      containers:
+      - name: naasgul
+        image: naasgul_stats_crawler_snmp:latest
+        #args: ["/naasgul"]
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DB_STRING
+          value: "mongodb://mongodb:27017/"
         - name: SNMP_USER
           valueFrom:
           secretKeyRef:
