@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: naasgul
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: naasgul
+  namespace: naasgul
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: naasgul
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - ""
+  verbs:
+  - ""
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: naasgul
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: naasgul
+subjects:
+- kind: ServiceAccount
+  name: naasgul
+  namespace: naasgul
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: naasgul_api
+  namespace: naasgul
+  labels:
+    k8s-app: naasgul_api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      k8s-app: naasgul_api
+  template:
+    metadata:
+      labels:
+        k8s-app: naasgul_api
+    spec:
+      containers:
+      - name: naasgul
+        image: naasgul_api:latest
+        #args: ["/naasgul"]
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DB_STRING
+          value: "mongodb://mongodb:27017/"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 20244
+          initialDelaySeconds: 10
+          periodSeconds: 3
+          ports:
+            - containerPort: 80
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/not-ready
+        operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
