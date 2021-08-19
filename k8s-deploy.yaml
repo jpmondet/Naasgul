@@ -10,7 +10,8 @@ metadata:
   name: naasgul
   namespace: naasgul
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+#apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: naasgul
@@ -22,7 +23,8 @@ rules:
   verbs:
   - ""
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+#apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: naasgul
@@ -38,19 +40,19 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: naasgul_api
+  name: naasgul-api
   namespace: naasgul
   labels:
-    k8s-app: naasgul_api
+    k8s-app: naasgul-api
 spec:
   replicas: 3
   selector:
     matchLabels:
-      k8s-app: naasgul_api
+      k8s-app: naasgul-api
   template:
     metadata:
       labels:
-        k8s-app: naasgul_api
+        k8s-app: naasgul-api
     spec:
       containers:
       - name: naasgul
@@ -59,7 +61,7 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
         - name: DB_STRING
-          value: "mongodb://mongodb:27017/"
+          value: "mongodb://naasgul-mongodb:27017/"
         livenessProbe:
           httpGet:
             path: /healthz
@@ -72,19 +74,19 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: naasgul_topo_scrapper
+  name: naasgul-topo-scrapper
   namespace: naasgul
   labels:
-    k8s-app: naasgul_topo_scrapper
+    k8s-app: naasgul-topo-scrapper
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: naasgul_topo_scrapper
+      k8s-app: naasgul-topo-scrapper
   template:
     metadata:
       labels:
-        k8s-app: naasgul_topo_scrapper
+        k8s-app: naasgul-topo-scrapper
     spec:
       containers:
       - name: naasgul
@@ -93,52 +95,52 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
         - name: DB_STRING
-          value: "mongodb://mongodb:27017/"
+          value: "mongodb://naasgul-mongodb:27017/"
         - name: LLDP_INIT_NODE_FQDN
           value: "" # CI_VAR to add here
         - name: LLDP_INIT_NODE_IP
           value: "" # CI_VAR to add here
-        - name: LLDP_INIT_NODE_PORT=161
+        - name: LLDP_INIT_NODE_PORT
           value: "" # CI_VAR to add here
-        - name: LLDP_STOP_NODES_FQDN=
+        - name: LLDP_STOP_NODES_FQDN
           value: "" # CI_VAR to add here
-        - name: LLDP_STOP_NODES_IP=
+        - name: LLDP_STOP_NODES_IP
           value: "" # CI_VAR to add here
         - name: SNMP_USER
           valueFrom:
-          secretKeyRef:
-            name: snmp_user
-            key: snmp_user
+            secretKeyRef:
+              name: snmpcreds
+              key: snmp-user
           # kubectl create secret generic db-user-pass \
           #         --from-literal=username=devuser \
           #         --from-literal=password='S!B\*d$zDsb='
         - name: SNMP_AUTH_PWD
           valueFrom:
-          secretKeyRef:
-            name: snmp_auth_pwd
-            key: snmp_auth_pwd
+            secretKeyRef:
+              name: snmpcreds
+              key: snmp-auth-pwd
         - name: SNMP_PRIV_PWD
           valueFrom:
-          secretKeyRef:
-            name: snmp_priv_pwd
-            key: snmp_priv_pwd
+            secretKeyRef:
+              name: snmpcreds
+              key: snmp-priv-pwd
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: naasgul_stats_scrapper
+  name: naasgul-stats-scrapper
   namespace: naasgul
   labels:
-    k8s-app: naasgul_stats_scrapper
+    k8s-app: naasgul-stats-scrapper
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: naasgul_stats_scrapper
+      k8s-app: naasgul-stats-scrapper
   template:
     metadata:
       labels:
-        k8s-app: naasgul_stats_scrapper
+        k8s-app: naasgul-stats-scrapper
     spec:
       containers:
       - name: naasgul
@@ -147,50 +149,129 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
         - name: DB_STRING
-          value: "mongodb://mongodb:27017/"
+          value: "mongodb://naasgul-mongodb:27017/"
         - name: SNMP_USER
           valueFrom:
-          secretKeyRef:
-            name: snmp_user
-            key: snmp_user
+            secretKeyRef:
+              name: snmpcreds
+              key: snmp-user
         - name: SNMP_AUTH_PWD
           valueFrom:
-          secretKeyRef:
-            name: snmp_auth_pwd
-            key: snmp_auth_pwd
+            secretKeyRef:
+              name: snmpcreds
+              key: snmp-auth-pwd
         - name: SNMP_PRIV_PWD
           valueFrom:
-          secretKeyRef:
-            name: snmp_priv_pwd
-            key: snmp_priv_pwd
+            secretKeyRef:
+              name: snmpcreds
+              key: snmp-priv-pwd
+---
+#
+# THIS MONGODB DEPLOYMENT IS FOR DEV PURPOSES AND SHOULDN'T BE USED IN PRODUCTION
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: naasgul-mongodb
+  namespace: naasgul
+  labels:
+    k8s-app: naasgul-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: naasgul-mongodb
+  template:
+    metadata:
+      labels:
+        k8s-app: naasgul-mongodb
+    spec:
+      containers:
+      - name: naasgul
+        image: mongo:4.4.3-bionic
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        ports:
+          - containerPort: 27017
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: naasgul_frontend
+  name: naasgul-frontend
   namespace: naasgul
   labels:
-    k8s-app: naasgul_frontend
+    k8s-app: naasgul-frontend
 spec:
   replicas: 3
   selector:
     matchLabels:
-      k8s-app: naasgul_frontend
+      k8s-app: naasgul-frontend
   template:
     metadata:
       labels:
-        k8s-app: naasgul_frontend
+        k8s-app: naasgul-frontend
     spec:
       containers:
       - name: naasgul
         image: naasgul_frontend:latest
         #args: ["/naasgul"]
         imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 80
-          initialDelaySeconds: 10
-          periodSeconds: 3
+        env:
+        - name: NAASGUL_API_URL
+          value: "http://naasgul-api:8080"
         ports:
           - containerPort: 80
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: naasgul-frontend
+  namespace: naasgul
+spec:
+  selector:
+    app: naasgul-frontend
+  ports:
+  - port: 80
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: naasgul-mongodb
+  namespace: naasgul
+spec:
+  selector:
+    app: naasgul-mongodb
+  ports:
+  - port: 27017
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: naasgul-api
+  namespace: naasgul
+spec:
+  selector:
+    app: naasgul-api
+  ports:
+  - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-ingress
+  namespace: naasgul
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/naasgul"
+        backend:
+          service:
+            name: naasgul-frontend-service
+            port:
+              number: 80
