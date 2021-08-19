@@ -14,20 +14,20 @@ black:
   image: python:3.9.6-slim-buster
   script:
     - pip install black
-    - black -l 100 -t py38 --check backend/ tests/
+    - black -l 100 -t py39 --check --diff --color backend/ tests/
 
 pylint:
   stage: tests
   image: python:3.9.6-slim-buster
   script:
-    - pip install pylint
+    - pip install -r requirements-dev.txt
     - pylint -d duplicate-code backend/ tests/
 
 mypy:
   stage: tests
   image: python:3.9.6-slim-buster
   script:
-    - pip install mypy
+    - pip install -r requirements-dev.txt
     - mypy --strict backend/ tests/
 
 bandit:
