@@ -17,7 +17,7 @@ if ('serviceWorker' in navigator && 'caches' in window) {
   });
 }
 
-apiUrl = "http://127.0.0.1:8000";
+apiUrl = "http://127.0.0.1/api";
 
 // ####################################
 // # replaces content of specified DIV

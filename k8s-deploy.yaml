@@ -280,23 +280,23 @@ spec:
             port:
               number: 80
 ---
-#apiVersion: networking.k8s.io/v1
-#kind: Ingress
-#metadata:
-#  name: naasgul-frontend-src
-#  annotations:
-#    # use the shared ingress-nginx
-#    kubernetes.io/ingress.class: "nginx"
-#    nginx.ingress.kubernetes.io/rewrite-target: /src
-#  namespace: naasgul
-#spec:
-#  rules:
-#  - http:
-#      paths:
-#      - path: /naasgul
-#        pathType: Prefix
-#        backend:
-#          service:
-#            name: naasgul-frontend
-#            port:
-#              number: 80
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: naasgul-api
+  annotations:
+    # use the shared ingress-nginx
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  namespace: naasgul
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: naasgul-api
+            port:
+              number: 8080
