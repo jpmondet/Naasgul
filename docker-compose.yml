@@ -18,7 +18,7 @@ services:
     environment:
     - DB_STRING=mongodb://mongodb:27017/
     ports: 
-    - 80:80
+    - 8000:80
   topo_scrapper_snmp:
     build:
       context: ${REPO_PATH}/backend/
@@ -46,5 +46,7 @@ services:
     build:
       context: ${REPO_PATH}/frontend/
       dockerfile: Dockerfile
+      args:
+        apipath: "http://127.0.0.1:8000"
     ports:
     - 8080:80
