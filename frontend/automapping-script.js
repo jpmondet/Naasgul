@@ -17,24 +17,7 @@ if ('serviceWorker' in navigator && 'caches' in window) {
   });
 }
 
-//var apiUrl = "http://127.0.0.1:8000"
-const processEnv = typeof process !== 'undefined' ? process.env : {};
-const injectedEnv = window && window.injectedEnv ? window.injectedEnv : {};
-//const env = {
-//  ...processEnv,
-//  ...injectedEnv,
-//};
-var apiUrl = ""; 
-if (Object.keys(processEnv).length !== 0) {
-  console.log(processEnv);
-  apiUrl = process.env.NAASGUL_API_URL;
-  console.log(apiUrl, process.env.NAASGUL_API_URL);
-} else if (Object.keys(injectedEnv).length !== 0) {
-  console.log(injectedEnv);
-  apiUrl = window.injectedEnv.NAASGUL_API_URL;
-} else {
-  apiUrl = "http://127.0.0.1:8000";
-}
+apiUrl = "http://127.0.0.1:8000";
 
 // ####################################
 // # replaces content of specified DIV
