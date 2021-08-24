@@ -233,7 +233,7 @@ metadata:
   namespace: naasgul
 spec:
   selector:
-    app: naasgul-frontend
+    k8s-app: naasgul-frontend
   ports:
   - port: 80
 ---
@@ -244,7 +244,7 @@ metadata:
   namespace: naasgul
 spec:
   selector:
-    app: naasgul-mongodb
+    k8s-app: naasgul-mongodb
   ports:
   - port: 27017
 ---
@@ -255,23 +255,48 @@ metadata:
   namespace: naasgul
 spec:
   selector:
-    app: naasgul-api
+    k8s-app: naasgul-api
   ports:
   - port: 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: frontend-ingress
+  name: naasgul-frontend
+  annotations:
+    # use the shared ingress-nginx
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
   namespace: naasgul
 spec:
   rules:
   - http:
       paths:
-      - pathType: Prefix
-        path: "/naasgul"
+      - path: /
+        pathType: Prefix
         backend:
           service:
-            name: naasgul-frontend-service
+            name: naasgul-frontend
             port:
               number: 80
+---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: naasgul-frontend-src
+#  annotations:
+#    # use the shared ingress-nginx
+#    kubernetes.io/ingress.class: "nginx"
+#    nginx.ingress.kubernetes.io/rewrite-target: /src
+#  namespace: naasgul
+#spec:
+#  rules:
+#  - http:
+#      paths:
+#      - path: /naasgul
+#        pathType: Prefix
+#        backend:
+#          service:
+#            name: naasgul-frontend
+#            port:
+#              number: 80
