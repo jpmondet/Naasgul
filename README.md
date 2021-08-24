@@ -15,7 +15,7 @@ That means that this project aims to output a map of the network topology and re
 
 (Was greatly inspired by a similar PoC project from `zerxen` at first)
 
-## Quick Non-prod Usage
+## Quick Non-prod Usage with docker-compose
 
 - `python3 -m venv venv`
 - `. venv/bin/activate`
@@ -28,6 +28,45 @@ That means that this project aims to output a map of the network topology and re
 - Those LLDP variables can be specified in a `.env` file if using `docker-compose`
 - `cd frontend/ ; . nodeenv/bin/activate ; terser automapping-script.js -o public-html/automapping-script.min.js ; html-minifier-terser --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --remove-script-type-attributes --remove-tag-whitespace --use-short-doctype --minify-css true --minify-js true index.html -o public-html/index.html ;  cd .. ; docker-compose up -V --force-recreate --always-recreate-deps --build --remove-orphans`
 - Browser to http://127.0.0.1:8080
+
+## Quick Non-prod (or is it?) Usage with k8s
+
+### No k8s cluster ? Create one locally with kind :
+
+- Getting `kind` :
+```
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+chmod +x ./kind
+mv ./kind /usr/local/bin/kind
+```
+
+- Creating a kind cluster with extra port mapping
+```
+cat <<EOF | kind create cluster --config=-
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
+    protocol: TCP
+EOF
+```
+- Adding an ingress to the cluster : `kubectl apply -f resources/ingress-nginx.yaml`
+
+### Adding Naasgul stack
+
+- Applying Naasgul yaml : `kubectl apply -f resources/k8s-deploy.yaml`
 
 ### No devices to tests ? Add fake datas
 
