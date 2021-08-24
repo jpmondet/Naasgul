@@ -589,7 +589,12 @@ def add_static_node(
 ) -> Dict[str, str]:
     """Adds a node to the DB (static nodes that aren't lldp-discoverable)
     (see in scripts/add_non_lldp_device.py for the original script, it may be easier to use
-    in some cases)"""
+    in some cases)
+
+    Exple of simplest call :
+    curl -X GET --user u:p -H "Content-type: application/json" \
+          http://127.0.0.1/api/add_static_node \
+              -d '{ "node": { "name": "test", "ifaces": ["1/1","1/2"]} }'"""
 
     if not node.name and not node.addr:
         raise HTTPException(
