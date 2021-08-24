@@ -187,7 +187,7 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tupl
     # Exemple for a device named sw1.iou
     # We assume that 'sw' is the function and '1' its localisation (yeah
     # not really a localisation but well, it's an example ;-) )
-    regex_pattern: re.Pattern[str] = re.compile(
+    regex_pattern: re.Pattern[str] = re.compile( # pylint: disable=unsubscriptable-object
         "^([a-z]{2})([0-9]+).*", re.IGNORECASE
     )  # pylint: disable=unsubscriptable-object
     matched: Optional[re.Match[str]] = regex_pattern.match(
