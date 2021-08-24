@@ -220,9 +220,6 @@ spec:
         image: naasgul_frontend:latest
         #args: ["/naasgul"]
         imagePullPolicy: IfNotPresent
-        env:
-        - name: NAASGUL_API_URL
-          value: "http://naasgul-api:8080"
         ports:
           - containerPort: 80
 ---
@@ -257,7 +254,7 @@ spec:
   selector:
     k8s-app: naasgul-api
   ports:
-  - port: 8080
+  - port: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -287,16 +284,16 @@ metadata:
   annotations:
     # use the shared ingress-nginx
     kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
   namespace: naasgul
 spec:
   rules:
   - http:
       paths:
-      - path: /api
+      - path: /api(/|$)(.*)
         pathType: Prefix
         backend:
           service:
             name: naasgul-api
             port:
-              number: 8080
+              number: 80
