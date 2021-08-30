@@ -17,18 +17,18 @@ if ('serviceWorker' in navigator && 'caches' in window) {
   });
 }
 
-apiUrl = "http://127.0.0.1/api";
+var apiUrl = "http://127.0.0.1/api";
 
 // ####################################
 // # replaces content of specified DIV
 // ####################################
 function printToDivWithID(id,text){
-  div = document.getElementById(id);
+  var div = document.getElementById(id);
   div.innerHTML += text;
 }
 
 function cleanDivWithID(id){
-  div = document.getElementById(id);
+  var div = document.getElementById(id);
   div.innerHTML = "";
 }
 
@@ -38,7 +38,7 @@ function OnClickLinkDetails(source_name, target_name, source_interfaces, target_
 
     printToDivWithID("infobox_header", source_name.id + " - " + target_name.id + "<br>")
 
-    targetdiv = document.getElementById("infobox")
+    var targetdiv = document.getElementById("infobox")
 
     fetch(apiUrl + "/stats/?devices=" + source_name.id + "&devices=" + target_name.id)
     .then(function(response) {
@@ -47,18 +47,18 @@ function OnClickLinkDetails(source_name, target_name, source_interfaces, target_
         }
         return response.json();
     }).then(function(data){
-          for (var iface of source_interfaces){
+          for (let siface of source_interfaces){
 
-              var interface = data[source_name.id][iface];
-              var iDivGraph = document.createElement('div');
+              let interface = data[source_name.id][siface];
+              let iDivGraph = document.createElement('div');
               iDivGraph.id = source_name.id + "_" + interface['ifDescr'] + "_graph";
               targetdiv.appendChild(iDivGraph);
 
               draw_device_interface_graphs_to_div(interface,source_name.id, targetdiv)
           }
-          for (var iface of target_interfaces){
-              var interface = data[target_name.id][iface];
-              var iDivGraph = document.createElement('div');
+          for (let tiface of target_interfaces){
+              let interface = data[target_name.id][tiface];
+              let iDivGraph = document.createElement('div');
               iDivGraph.id = target_name.id + "_" + interface['ifDescr'] + "_graph";
               targetdiv.appendChild(iDivGraph);
 
@@ -98,15 +98,13 @@ function draw_device_interface_graphs_to_div(interfaceName, deviceid, targetdiv)
         }
 
         draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings,iDivGraph)
-        //draw_graph_from_data_to_div_with_d3_with_brush(interfaceName['stats'], iDivGraph)
 
 }
 
 // This draws all interfaces from device to div
 function draw_device_graphs_to_div(deviceid, data, targetdiv){
-
-    for (var interface of data[deviceid]['interfaces']){
-        draw_device_interface_graphs_to_div(interface,deviceid, targetdiv)
+    for (let iface in data){
+        draw_device_interface_graphs_to_div(data[iface], deviceid, targetdiv)
     }
 }
 
@@ -280,15 +278,7 @@ function OnViewChange(deviceid, view = "neighbors"){
               return;
             }
             response.json().then(function(data) {
-
-              for (var iface in data[deviceid]) {
-                var interface = data[deviceid][iface]
-                var targetdiv = document.getElementById("infobox")
-                var iDivGraph = document.createElement('div');
-                iDivGraph.id = deviceid + "_" + interface['ifDescr'] + "_graph";
-                targetdiv.appendChild(iDivGraph);
-                draw_device_interface_graphs_to_div(interface, deviceid, iDivGraph)
-              }
+              draw_device_graphs_to_div(deviceid, data[deviceid], document.getElementById("infobox"));
             });
           }
         )
