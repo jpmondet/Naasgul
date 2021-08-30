@@ -241,11 +241,15 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
 // PRINTING DEVICE DETAILS TABLE
 // =============================
 
-//function viewChangeFunc(deviceid) {
-//    var selectBox = document.getElementById("viewSelectBox");
-//    var selectedValue = selectBox.options[selectBox.selectedIndex].value;
-//    OnViewChange(deviceid, selectedValue);
-//}
+/* eslint-disable no-unused-vars */
+// This func is used in 'OnClickDetails' in view_select_box hidden under quotes
+// so eslint think it's not used.
+function viewChangeFunc(deviceid) {
+/* eslint-enable no-unused-vars */
+    var selectBox = document.getElementById("viewSelectBox");
+    var selectedValue = selectBox.options[selectBox.selectedIndex].value;
+    OnViewChange(deviceid, selectedValue);
+}
 
 function OnClickDetails(deviceid){//, view = "neighbors"){
     cleanDivWithID("infobox_header")
