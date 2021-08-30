@@ -120,11 +120,6 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
       }, {
           step: 'day',
           stepmode: 'todate',
-          count: 3,
-          label: '3d'
-      }, {
-          step: 'day',
-          stepmode: 'todate',
           count: 7,
           label: '1w'
       }, {
@@ -135,25 +130,15 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
       }, {
           step: 'month',
           stepmode: 'todate',
-          count: 3,
-          label: '3m'
-      }, {
-          step: 'month',
-          stepmode: 'todate',
           count: 6,
           label: '6m'
-      }, {
-          step: 'year',
-          stepmode: 'todate',
-          count: 1,
-          label: '1y'
       }, {
           step: 'all',
       }],
     };
 
     var traceOut = {
-      type: 'scatter',
+      type: 'scattergl',
       x: TimeStampStrings,
       y: OutOctetsData,
       mode: 'lines',
@@ -165,7 +150,7 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
     };
 
     var traceIn = {
-      type: 'scatter',
+      type: 'scattergl',
       x: TimeStampStrings,
       y: InOctetsData,
       mode: 'lines',
@@ -207,6 +192,7 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
         title: 'bps',
         showline: true,
         //linecolor: '#fff',
+        //range: [0, 10000000000],
         showtickprefix: 'first'
       },
       paper_bgcolor: 'rgba(0,0,0,0)',
