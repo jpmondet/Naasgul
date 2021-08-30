@@ -270,6 +270,13 @@ function OnViewChange(deviceid, view = "neighbors"){
             }
             response.json().then(function(data) {
               draw_device_graphs_to_div(deviceid, data[deviceid], document.getElementById("infobox"));
+              //let view_select_box = ""
+              //view_select_box += "<div>views: <select id=\"viewSelectBox\" onchange=\"viewChangeFunc('"+deviceid+"');\">"
+              //view_select_box += "<option value=\"neighbors\">Neighbors</option>"
+              //view_select_box += "<option value=\"traffic\">Traffic</option>"
+              //view_select_box += "<option value=\"clear\">Clear</option>"
+              //view_select_box += "</select></div><br>"
+              //printToDivWithID("infobox_header", view_select_box)
             });
           }
         )
@@ -685,7 +692,8 @@ d3.json(apiUrl + "/graph")
     //console.time('startSimulationGraph')
     simulation
       .nodes(graph.nodes)
-      .on("tick", ticked);
+      .on("end", ticked);
+      //.on("tick", ticked);
 
     simulation.force("link")
       .links(links);
