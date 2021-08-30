@@ -152,7 +152,7 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
       }],
     };
 
-    traceOut = {
+    var traceOut = {
       type: 'scatter',
       x: TimeStampStrings,
       y: OutOctetsData,
@@ -164,7 +164,7 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
       }
     };
 
-    traceIn = {
+    var traceIn = {
       type: 'scatter',
       x: TimeStampStrings,
       y: InOctetsData,
@@ -230,8 +230,9 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
 
     //Plotly.newPlot(iDivGraph, data, layout, {showSendToCloud: false});
     console.time('Draw_device_iface')
+    /* eslint-disable no-undef */
     Plotly.react(iDivGraph, data, layout, config);
-
+    /* eslint-enable no-undef */
     console.timeEnd('Draw_device_iface')
 }
 
@@ -240,17 +241,17 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
 // PRINTING DEVICE DETAILS TABLE
 // =============================
 
-function viewChangeFunc(deviceid) {
-    var selectBox = document.getElementById("viewSelectBox");
-    var selectedValue = selectBox.options[selectBox.selectedIndex].value;
-    OnViewChange(deviceid,selectedValue);
-}
+//function viewChangeFunc(deviceid) {
+//    var selectBox = document.getElementById("viewSelectBox");
+//    var selectedValue = selectBox.options[selectBox.selectedIndex].value;
+//    OnViewChange(deviceid, selectedValue);
+//}
 
-function OnClickDetails(deviceid, view = "neighbors"){
+function OnClickDetails(deviceid){//, view = "neighbors"){
     cleanDivWithID("infobox_header")
     printToDivWithID("infobox_header",deviceid);
-    view_select_box = ""
-    view_select_box += "<div>views: <select id=\"viewSelectBox\" onchange=\"viewChangeFunc(\'"+deviceid+"\');\">"
+    let view_select_box = ""
+    view_select_box += "<div>views: <select id=\"viewSelectBox\" onchange=\"viewChangeFunc('"+deviceid+"');\">"
     view_select_box += "<option value=\"neighbors\">Neighbors</option>"
     view_select_box += "<option value=\"traffic\">Traffic</option>"
     view_select_box += "<option value=\"clear\">Clear</option>"
@@ -303,7 +304,7 @@ function OnViewChange(deviceid, view = "neighbors"){
                   printToDivWithID("infobox",tableFromNeighbor(data));
               }
               else {
-                warning_text = "<h4>The selected device id: ";
+                let warning_text = "<h4>The selected device id: ";
                 warning_text+= deviceid;
                 warning_text+= " is not in database!</h4>";
                 warning_text+= "This is most probably as you clicked on edge node ";
@@ -319,34 +320,7 @@ function OnViewChange(deviceid, view = "neighbors"){
     } else if (view == "clear"){
       cleanDivWithID("infobox");
       //cleanDivWithID("infobox_header")
-    };
-}
-
-// ####################################
-// # using input parameters returns
-// # HTML table with these inputs
-// ####################################
-function tableFromUnusedInterfaces(key,data){
-  text = "<table class=\"infobox2\">";
-  text+= "<thead><th>LOCAL INT.</th><th>TYPE</th><th>SPEED</th>";
-  text+= "</thead>";
-
-  for (var neighbor in data[key]) {
-    text+= "<tr>";
-
-    //console.log("local_intf:" + data[key][neighbor]['ifDescr']);
-    text+= "<td>" + data[key][neighbor]['ifDescr'] + "</td>";
-    //console.log("description:" + data[key][neighbor]['ifType']);
-    text+= "<td>" + data[key][neighbor]['ifType'] + "</td>";
-    //console.log("actual_bandwith:" + data[key][neighbor]['ifSpeed']);
-    text+= "<td>" + data[key][neighbor]['ifSpeed'] + "</td>";
-
-    text+= "</tr>";
-  }
-
-  text+= "</table>";
-
-  return text;
+    }
 }
 
 // ####################################
@@ -354,7 +328,7 @@ function tableFromUnusedInterfaces(key,data){
 // # HTML table with these inputs
 // ####################################
 function tableFromNeighbor(data){
-  text = "<table class=\"infobox\">";
+  let text = "<table class=\"infobox\">";
   text+= "<thead><th>LOCAL INT.</th><th>NEIGHBOR</th><th>NEIGHBOR'S INT</th>";
   text+= "</thead>";
 
@@ -472,7 +446,7 @@ function navRelease() {
 // RESIZE SVG ON WINDOW RESIZE
 // ###########################
 
-var intervalID = setInterval(resize_svg_on_window_resize, 5000);
+setInterval(resize_svg_on_window_resize, 5000);
 function resize_svg_on_window_resize(){
     //console.log("resize_svg_on_window_resize TRIGGERED")
     var svg_element = document.getElementById('primary-svg');
@@ -480,13 +454,13 @@ function resize_svg_on_window_resize(){
     var res = original_viewBox.split(" ");
 
     // ### SELECT EITHER LEFT SIDEBAR OR WINDOW AS THE NEW HIGHT WHICHEVER IS BIGGER
-    windowHeight = window.innerHeight; //|| document.documentElement.clientHeight || document.body.clientHeight;
+    let windowHeight = window.innerHeight; //|| document.documentElement.clientHeight || document.body.clientHeight;
     var rect = document.getElementById('left-sidebar').getBoundingClientRect();
 
     if (rect.height > windowHeight){
         var newClientHeight = rect.height;
     } else {
-        var newClientHeight = windowHeight;
+        newClientHeight = windowHeight;
     }
 
     // ### SET THE HIGHT OF THE SVG AND SURROUNDING CONTAINER
@@ -504,6 +478,7 @@ function resize_svg_on_window_resize(){
 // ########
 
 // #################################
+/* global d3 */
 var svg = d3.select("div#container")
     .append("svg")
     .attr("id", "primary-svg")
@@ -513,18 +488,17 @@ var svg = d3.select("div#container")
     .classed("svg-content", true);
 
 
-
 var svg_element = document.getElementById('primary-svg');
 var positionInfo = svg_element.getBoundingClientRect();
-    height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-    //console.log(window.innerHeight, document.documentElement.clientHeight, document.body.clientHeight);
-    //height =  2160;
-    width = positionInfo.width ;
-    //width = 3840;
-    svg_element.setAttribute("preserveAspectRatio", "xMinYMin")
-    svg_element.setAttribute("viewBox", "0 0 " + width + " " + height)
-    //console.log("Initial width:" + width)
-    //console.log("Initial height:"+ height)
+var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+//console.log(window.innerHeight, document.documentElement.clientHeight, document.body.clientHeight);
+//height = 2160;
+var width = positionInfo.width ;
+//width = 3840;
+svg_element.setAttribute("preserveAspectRatio", "xMinYMin")
+svg_element.setAttribute("viewBox", "0 0 " + width + " " + height)
+//console.log("Initial width:" + width)
+//console.log("Initial height:"+ height)
 
 // Trying to set height of main SVG
 document.getElementById('container').style.height = height + "px";
@@ -617,7 +591,7 @@ d3.json(apiUrl + "/graph")
     //console.timeEnd('getGraph')
     //console.time('createLinksGraph')
 
-    links = graph.links
+    var links = graph.links
 
     var link = svg.append("g")
       .attr("id","links-g")
@@ -795,8 +769,8 @@ function onDragStart(d) {
 }
 
 function onDrag(d) {
-   d.px = validate(d.px, 0, w);
-   d.py = validate(d.py, 0, h);
+   d.px = validate(d.px, 0, width);
+   d.py = validate(d.py, 0, height);
 }
 
 
