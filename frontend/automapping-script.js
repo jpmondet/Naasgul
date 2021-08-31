@@ -80,7 +80,7 @@ function draw_device_interface_graphs_to_div(interfaceName, deviceid, targetdiv)
 
         var iDiv = document.createElement('div');
         iDiv.id = deviceid + "_" + interfaceName['ifDescr'] + "_graph_header";
-        iDiv.align = 'left';
+        //iDiv.align = 'left';
         iDiv.innerHTML = "<br>" + deviceid + " - " + interfaceName['ifDescr'];
         targetdiv.appendChild(iDiv);
 
@@ -97,16 +97,16 @@ function draw_device_interface_graphs_to_div(interfaceName, deviceid, targetdiv)
             OutOctetsData.push(stats['OutSpeed'])
         }
 
-        draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings,iDivGraph)
+        draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings,iDivGraph);
 
 }
 
 // This draws all interfaces from device to div
-function draw_device_graphs_to_div(deviceid, data, targetdiv){
-    for (let iface in data){
-        draw_device_interface_graphs_to_div(data[iface], deviceid, targetdiv)
-    }
-}
+//function draw_device_graphs_to_div(deviceid, data, targetdiv){
+//    for (let iface in data){
+//        draw_device_interface_graphs_to_div(data[iface], deviceid, targetdiv)
+//    }
+//}
 
 function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings,iDivGraph){
 
@@ -230,31 +230,78 @@ function draw_graph_from_data_to_div(InOctetsData,OutOctetsData,TimeStampStrings
 /* eslint-disable no-unused-vars */
 // This func is used in 'OnClickDetails' in view_select_box hidden under quotes
 // so eslint think it's not used.
-function viewChangeFunc(deviceid) {
+function viewChangeFunc(deviceid, selectbox = "viewSelectBox") {
 /* eslint-enable no-unused-vars */
-    var selectBox = document.getElementById("viewSelectBox");
+    var selectBox = document.getElementById(selectbox);
     var selectedValue = selectBox.options[selectBox.selectedIndex].value;
     OnViewChange(deviceid, selectedValue);
 }
 
-function OnClickDetails(deviceid){//, view = "neighbors"){
-    cleanDivWithID("infobox_header")
-    printToDivWithID("infobox_header",deviceid);
-    let view_select_box = ""
-    view_select_box += "<div>views: <select id=\"viewSelectBox\" onchange=\"viewChangeFunc('"+deviceid+"');\">"
-    view_select_box += "<option value=\"neighbors\">Neighbors</option>"
-    view_select_box += "<option value=\"traffic\">Traffic</option>"
-    view_select_box += "<option value=\"clear\">Clear</option>"
-    view_select_box += "</select></div><br>"
-    printToDivWithID("infobox_header",view_select_box)
+/* eslint-disable no-unused-vars */
+function ifaceChangeFunc(deviceid, selectbox = "ifaceSelectBox") {
+/* eslint-enable no-unused-vars */
+    var selectBox = document.getElementById(selectbox);
+    var selectedValue = selectBox.options[selectBox.selectedIndex].value;
+    OnIfaceChange(deviceid, selectedValue);
+}
 
+function PrintSelectBox(deviceid){
+    cleanDivWithID("infobox_header");
+    printToDivWithID("infobox_header",deviceid);
+    let view_select_box = "";
+    view_select_box += "<div>views: <select id=\"viewSelectBox\" onchange=\"viewChangeFunc('"+deviceid+"');\">";
+    view_select_box += "<option value=\"neighbors\">Neighbors</option>";
+    view_select_box += "<option value=\"traffic\">Traffic</option>";
+    view_select_box += "<option value=\"clear\">Clear</option>";
+    view_select_box += "</select></div><br>";
+    printToDivWithID("infobox_header",view_select_box);
+}
+
+function PrintIfaceSelectBox(deviceid, ifacesStats) {
+    cleanDivWithID("infobox");
+    let view_select_box = "";
+    //view_select_box += "<div>views: <select id=\"ifaceSelectBox\" onchange=\"ifaceChangeFunc('"+deviceid+"',ifaceSelectBox,'"+JSON.stringify(JSON.stringify(ifacesStats))+"');\">";
+    //let ifacesStatsJson = JSON.stringify(JSON.stringify(ifacesStats));
+    //let ifacesStatsJson = JSON.stringify(JSON.stringify(ifacesStats));
+    view_select_box += "<div>views: <select id=\"ifaceSelectBox\" onchange=\"ifaceChangeFunc('"+deviceid+"');\">";
+    for (let iface in ifacesStats){
+      view_select_box += "<option value='"+iface+"'>'"+iface+"'</option>";
+    }
+    view_select_box += "</select></div><br>";
+    printToDivWithID("infobox", view_select_box);
+
+}
+
+function OnClickDetails(deviceid){//, view = "neighbors"){
+    PrintSelectBox(deviceid);
     // ## INITIATE FIRST PASSIVE VIEW CHANGE
-    OnViewChange(deviceid)
+    OnViewChange(deviceid);
+}
+
+function OnIfaceChange(deviceid, iface){
+    cleanDivWithID("infobox");
+    fetch(apiUrl + "/stats/?devices=" + deviceid)
+    .then(
+      function(response) {
+        if (response.status !== 200) {
+          console.log('Looks like there was a problem. Status Code: ' +
+            response.status);
+          return;
+        }
+        response.json().then(function(data) {
+          PrintIfaceSelectBox(deviceid, data[deviceid]);
+          draw_device_interface_graphs_to_div(data[deviceid][iface], deviceid, document.getElementById("infobox"));
+        });
+      }
+    )
+    .catch(function(err) {
+      console.log('Fetch Error :-S', err);
+    });
 }
 
 function OnViewChange(deviceid, view = "neighbors"){
     // # Initial cleanup
-    cleanDivWithID("infobox")
+    cleanDivWithID("infobox");
 
     // #############################
     // # CREATING GRAPHS      #
@@ -269,14 +316,9 @@ function OnViewChange(deviceid, view = "neighbors"){
               return;
             }
             response.json().then(function(data) {
-              draw_device_graphs_to_div(deviceid, data[deviceid], document.getElementById("infobox"));
-              //let view_select_box = ""
-              //view_select_box += "<div>views: <select id=\"viewSelectBox\" onchange=\"viewChangeFunc('"+deviceid+"');\">"
-              //view_select_box += "<option value=\"neighbors\">Neighbors</option>"
-              //view_select_box += "<option value=\"traffic\">Traffic</option>"
-              //view_select_box += "<option value=\"clear\">Clear</option>"
-              //view_select_box += "</select></div><br>"
-              //printToDivWithID("infobox_header", view_select_box)
+              PrintIfaceSelectBox(deviceid, data[deviceid]);
+              draw_device_interface_graphs_to_div(data[deviceid][Object.keys(data[deviceid])[0]], deviceid, document.getElementById("infobox"));
+              //draw_device_graphs_to_div(deviceid, data[deviceid], document.getElementById("infobox"));
             });
           }
         )
@@ -692,8 +734,9 @@ d3.json(apiUrl + "/graph")
     //console.time('startSimulationGraph')
     simulation
       .nodes(graph.nodes)
-      .on("end", ticked);
-      //.on("tick", ticked);
+      //.on("end", ticked);
+      .tick(100 / graph.nodes.length)
+      .on("tick", ticked);
 
     simulation.force("link")
       .links(links);
