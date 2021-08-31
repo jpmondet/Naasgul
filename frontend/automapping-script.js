@@ -732,11 +732,16 @@ d3.json(apiUrl + "/graph")
     //console.timeEnd('AddNodeTextGraph')
 
     //console.time('startSimulationGraph')
-    simulation
-      .nodes(graph.nodes)
-      //.on("end", ticked);
-      .tick(100 / graph.nodes.length)
-      .on("tick", ticked);
+    if (300 / graph.nodes.length < 1){
+      simulation
+        .nodes(graph.nodes)
+        .on("end", ticked);
+    } else { 
+      simulation
+        .nodes(graph.nodes)
+        .tick(parseInt(300/graph.nodes.length))
+        .on("tick", ticked);
+    }
 
     simulation.force("link")
       .links(links);
