@@ -264,6 +264,7 @@ function PrintIfaceSelectBox(deviceid, ifacesStats) {
     //let ifacesStatsJson = JSON.stringify(JSON.stringify(ifacesStats));
     //let ifacesStatsJson = JSON.stringify(JSON.stringify(ifacesStats));
     view_select_box += "<div>views: <select id=\"ifaceSelectBox\" onchange=\"ifaceChangeFunc('"+deviceid+"');\">";
+    view_select_box += "<option value='select'>'Select Iface'</option>";
     for (let iface in ifacesStats){
       view_select_box += "<option value='"+iface+"'>'"+iface+"'</option>";
     }
