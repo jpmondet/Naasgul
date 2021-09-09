@@ -231,7 +231,7 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tupl
 
 @app.get("/graph")
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-def get_graph() -> Dict[str, List[Dict[str, Any]]]:
+def get_graph(devices_regex: Optional[str] = Query(None)) -> Dict[str, List[Dict[str, Any]]]:
     """
             "links": [
                 {
@@ -261,12 +261,15 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
     However, "highest_utilization" must be updated each time the API is called
      with fresh "stats" values
     """
+
     background_time_update()
     # logger.error(f"Caching timeout : {TIMEOUT}")
 
     nodes: List[Dict[str, Any]] = get_from_db_or_cache("nodes", get_all_nodes)
 
     groups: Dict[str, int] = {}
+    if devices_regex:
+        nodes = [node for node in nodes if devices_regex.lower() in node["device_name"].lower()]
 
     for node in nodes:
         if (
@@ -285,10 +288,16 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
         except KeyError:
             pass
 
-    formatted_links: Dict[str, Any] = get_from_db_or_cache("formatted_links")
+    formatted_links: Dict[str, Any] = {}
+    if devices_regex:
+        formatted_links = get_from_db_or_cache(f"formatted_links{devices_regex}")
+    else:
+        formatted_links = get_from_db_or_cache("formatted_links")
     highest_uses: Dict[str, int] = defaultdict(int)
     if not formatted_links:
         links: Iterable[Dict[str, Any]] = get_from_db_or_cache("links", get_all_links)
+        if devices_regex:
+            links = [link for link in links if devices_regex.lower() in link["device_name"].lower() and devices_regex.lower() in link["neighbor_name"].lower()]
         sorted_links: List[Dict[str, Any]] = sorted(
             links, key=lambda d: (d["device_name"], d["neighbor_name"])
         )
@@ -396,7 +405,10 @@ def get_graph() -> Dict[str, List[Dict[str, Any]]]:
         # logger.error(f'Format links End: {time() - start_format_timer}')
 
         global CACHE, CACHED_TIMEOUT
-        CACHE["formatted_links"] = formatted_links
+        if devices_regex:
+            CACHE[f"formatted_links{devices_regex}"] = formatted_links
+        else:
+            CACHE["formatted_links"] = formatted_links
         CACHED_TIMEOUT["formatted_links"] = False
 
     return {"nodes": nodes, "links": list(formatted_links.values())}
