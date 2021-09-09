@@ -6,7 +6,7 @@ COPY automapping-script.js index.html background.css layout.css service-worker.j
 COPY public-html /public-html
 
 RUN sed -i "s/apiUrl = \"http:\/\/127.0.0.1\/api\"/apiUrl = $(printf '%s\n' \"$apipath\" | sed -e 's/[\/&]/\\&/g')/g" /automapping-script.js \
-      && npm install -g npm@7.21.1 \ 
+      #&& npm install -g npm@8.21.1 \ 
       && npm install html-minifier-terser@5.1.1 terser -g \
       && html-minifier-terser --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --remove-script-type-attributes --remove-tag-whitespace --use-short-doctype --minify-css true --minify-js true index.html -o public-html/index.html \
       && html-minifier-terser --collapse-whitespace --remove-comments --remove-optional-tags --remove-redundant-attributes --remove-script-type-attributes --remove-tag-whitespace --use-short-doctype --minify-css true --minify-js true background.css -o public-html/background.min.css \
