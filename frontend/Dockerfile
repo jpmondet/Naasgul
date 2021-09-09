@@ -17,3 +17,4 @@ RUN sed -i "s/apiUrl = \"http:\/\/127.0.0.1\/api\"/apiUrl = $(printf '%s\n' \"$a
 
 FROM httpd:2.4 as runimage
 COPY --from=buildimage /public-html/ /usr/local/apache2/htdocs/
+COPY --from=buildimage /public-html/my-httpd.conf /usr/local/apache2/conf/httpd.conf

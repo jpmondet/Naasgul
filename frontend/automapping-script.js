@@ -4,6 +4,8 @@ window.onload = function() {
   }, 300000);
 };
 
+console.log(window.location.pathname);
+
 if ('serviceWorker' in navigator && 'caches' in window) {
   navigator.serviceWorker.register('./service-worker.min.js', {scope: './'} ).then(
       (reg) => {
