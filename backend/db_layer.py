@@ -64,20 +64,20 @@ def get_entire_collection(mongodb_collection) -> List[Dict[str, Any]]:  # type: 
     return list(mongodb_collection.find({}))
 
 
-def get_all_nodes() -> Iterable[Dict[str, Any]]:
+def get_all_nodes() -> List[Dict[str, Any]]:
     """Returns all nodes as an iterator"""
     return get_entire_collection(NODES_COLLECTION)
 
 
-def get_nodes_by_patterns(patterns: List[str]) -> Iterable[Dict[str, Any]]:
+def get_nodes_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:
     """Returns all nodes matched as an iterator"""
-    return NODES_COLLECTION.find(
+    return list(NODES_COLLECTION.find(
         {
             "$or": [
                 {"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
             ]
         }
-    )
+    ))
 
 
 def get_node(node_name: str) -> Dict[str, Any]:
@@ -85,15 +85,15 @@ def get_node(node_name: str) -> Dict[str, Any]:
     return NODES_COLLECTION.find_one({"device_name": node_name})  # type: ignore
 
 
-def get_all_links() -> Iterable[Dict[str, Any]]:
+def get_all_links() -> List[Dict[str, Any]]:
     """Returns all links as an iterator"""
     return get_entire_collection(LINKS_COLLECTION)
 
 
-def get_links_by_patterns(patterns: List[str]) -> Iterable[Dict[str, Any]]:
+def get_links_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:
     """Returns all links matched as an iterator"""
 
-    return LINKS_COLLECTION.find(
+    return list(LINKS_COLLECTION.find(
         {
             "$or": [
                 {"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
@@ -101,7 +101,7 @@ def get_links_by_patterns(patterns: List[str]) -> Iterable[Dict[str, Any]]:
             #    {"neighbor_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
             #]
         }
-    )
+    ))
 
 
 def get_all_highest_utilizations() -> Dict[str, int]:

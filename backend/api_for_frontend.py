@@ -115,7 +115,7 @@ def check_credentials(
 
 
 def get_from_db_or_cache(
-    element: str, func: Optional[Callable[..., Any]] = None, query: Union[str, list] = None
+    element: str, func: Optional[Callable[..., Any]] = None, query: Union[str, List[str]] = ""
 ) -> Any:
     """Cache most db calls if they are not already cached.
     Also handles a timeout to retrieve from db from time to time"""
@@ -269,7 +269,7 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
 
     nodes: List[Dict[str, Any]] = []
     if isinstance(dpat, list):
-        nodes = get_from_db_or_cache(f"nodes{str(dpat)}", get_nodes_by_patterns, dpat)
+        nodes = list(get_from_db_or_cache(f"nodes{str(dpat)}", get_nodes_by_patterns, dpat))
     else:
         nodes = get_from_db_or_cache("nodes", get_all_nodes)
 
@@ -299,7 +299,7 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
         formatted_links = get_from_db_or_cache("formatted_links")
     highest_uses: Dict[str, int] = defaultdict(int)
     if not formatted_links:
-        links: Iterable[Dict[str, Any]] = []
+        links: List[Dict[str, Any]] = []
         if isinstance(dpat, list):
             links = get_from_db_or_cache(f"links{str(dpat)}", get_links_by_patterns, dpat)
         else:
