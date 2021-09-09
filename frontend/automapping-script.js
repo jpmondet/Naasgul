@@ -19,7 +19,7 @@ if ('serviceWorker' in navigator && 'caches' in window) {
 }
 
 var apiUrl = "http://127.0.0.1/api";
-var graphRegex = window.location.pathname;
+var graphRegex = window.location.search;
 
 // ####################################
 // # replaces content of specified DIV
@@ -628,7 +628,8 @@ function percentage_to_utilization_color(percentage){
 
 //console.time('getGraph')
 var graphUrl = apiUrl + "/graph";
-if (graphRegex !== "/") graphUrl += "?devices_regex=" + graphRegex.substring(1);
+if (graphRegex) graphUrl += graphRegex;
+console.log(graphRegex);
 d3.json(graphUrl)
   .then(function(graph) {
 
