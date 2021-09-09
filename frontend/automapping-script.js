@@ -4,7 +4,6 @@ window.onload = function() {
   }, 300000);
 };
 
-console.log(window.location.pathname);
 
 if ('serviceWorker' in navigator && 'caches' in window) {
   navigator.serviceWorker.register('./service-worker.min.js', {scope: './'} ).then(
@@ -20,6 +19,7 @@ if ('serviceWorker' in navigator && 'caches' in window) {
 }
 
 var apiUrl = "http://127.0.0.1/api";
+var graphRegex = window.location.pathname;
 
 // ####################################
 // # replaces content of specified DIV
@@ -627,7 +627,9 @@ function percentage_to_utilization_color(percentage){
 }
 
 //console.time('getGraph')
-d3.json(apiUrl + "/graph")
+var graphUrl = apiUrl + "/graph";
+if (graphRegex !== "/") graphUrl += "?devices_regex=" + graphRegex.substring(1);
+d3.json(graphUrl)
   .then(function(graph) {
 
     //console.timeEnd('getGraph')
