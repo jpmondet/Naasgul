@@ -8,7 +8,8 @@ from os import getenv
 from typing import List, Dict, Any, Optional, Iterable, Tuple
 from time import time
 from re import compile as rcompile, IGNORECASE as rIGNORECASE
-#from itertools import chain
+
+# from itertools import chain
 
 from pymongo import MongoClient, UpdateMany  # type: ignore
 from pymongo.errors import DuplicateKeyError as MDDPK  # type: ignore
@@ -71,13 +72,11 @@ def get_all_nodes() -> List[Dict[str, Any]]:
 
 def get_nodes_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:
     """Returns all nodes matched as an iterator"""
-    return list(NODES_COLLECTION.find(
-        {
-            "$or": [
-                {"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
-            ]
-        }
-    ))
+    return list(
+        NODES_COLLECTION.find(
+            {"$or": [{"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns]}
+        )
+    )
 
 
 def get_node(node_name: str) -> Dict[str, Any]:
@@ -93,15 +92,17 @@ def get_all_links() -> List[Dict[str, Any]]:
 def get_links_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:
     """Returns all links matched as an iterator"""
 
-    return list(LINKS_COLLECTION.find(
-        {
-            "$or": [
-                {"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
-            ]# + [
-            #    {"neighbor_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
-            #]
-        }
-    ))
+    return list(
+        LINKS_COLLECTION.find(
+            {
+                "$or": [
+                    {"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
+                ]  # + [
+                #    {"neighbor_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns
+                # ]
+            }
+        )
+    )
 
 
 def get_all_highest_utilizations() -> Dict[str, int]:

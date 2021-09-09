@@ -16,7 +16,7 @@
 import logging
 import re
 from os import getenv
-from typing import Dict, List, Any, Optional, Callable, Tuple, Iterable, Union
+from typing import Dict, List, Any, Optional, Callable, Tuple, Union
 from collections import defaultdict
 from time import strftime, localtime, time
 from secrets import compare_digest
@@ -189,7 +189,7 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tupl
     # Exemple for a device named sw1.iou
     # We assume that 'sw' is the function and '1' its localisation (yeah
     # not really a localisation but well, it's an example ;-) )
-    regex_pattern: re.Pattern[str] = re.compile( # pylint: disable=unsubscriptable-object
+    regex_pattern: re.Pattern[str] = re.compile(  # pylint: disable=unsubscriptable-object
         "^([a-z]{2})([0-9]+).*", re.IGNORECASE
     )  # pylint: disable=unsubscriptable-object
     matched: Optional[re.Match[str]] = regex_pattern.match(
@@ -633,6 +633,7 @@ def add_static_node(
 
     return {"response": "Ok"}
 
+
 @app.get("/healthz")
 def healthz() -> Dict[str, str]:
     """Simple func to let kubernetes know that the api is alive"""
@@ -640,6 +641,7 @@ def healthz() -> Dict[str, str]:
     # Should maybe test access to the DB before answering 'OK'
 
     return {"response": "Ok"}
+
 
 gunicorn_logger = logging.getLogger("gunicorn.info")
 logger.handlers = gunicorn_logger.handlers
