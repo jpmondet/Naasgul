@@ -16,7 +16,7 @@
 import logging
 import re
 from os import getenv
-from typing import Dict, List, Any, Optional, Callable, Tuple, Iterable
+from typing import Dict, List, Any, Optional, Callable, Tuple, Iterable, Union
 from collections import defaultdict
 from time import strftime, localtime, time
 from secrets import compare_digest
@@ -30,7 +30,9 @@ from pydantic import BaseModel
 from db_layer import (
     get_stats_devices,
     get_all_nodes,
+    get_nodes_by_patterns,
     get_all_links,
+    get_links_by_patterns,
     get_links_device,
     get_all_highest_utilizations,
     get_all_speeds,
@@ -113,7 +115,7 @@ def check_credentials(
 
 
 def get_from_db_or_cache(
-    element: str, func: Optional[Callable[..., Any]] = None, query: str = ""
+    element: str, func: Optional[Callable[..., Any]] = None, query: Union[str, list] = None
 ) -> Any:
     """Cache most db calls if they are not already cached.
     Also handles a timeout to retrieve from db from time to time"""
@@ -231,7 +233,7 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tupl
 
 @app.get("/graph")
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-def get_graph(devices_regex: Optional[str] = Query(None)) -> Dict[str, List[Dict[str, Any]]]:
+def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[str, Any]]]:
     """
             "links": [
                 {
@@ -265,11 +267,13 @@ def get_graph(devices_regex: Optional[str] = Query(None)) -> Dict[str, List[Dict
     background_time_update()
     # logger.error(f"Caching timeout : {TIMEOUT}")
 
-    nodes: List[Dict[str, Any]] = get_from_db_or_cache("nodes", get_all_nodes)
+    nodes: List[Dict[str, Any]] = []
+    if isinstance(dpat, list):
+        nodes = get_from_db_or_cache(f"nodes{str(dpat)}", get_nodes_by_patterns, dpat)
+    else:
+        nodes = get_from_db_or_cache("nodes", get_all_nodes)
 
     groups: Dict[str, int] = {}
-    if devices_regex:
-        nodes = [node for node in nodes if devices_regex.lower() in node["device_name"].lower()]
 
     for node in nodes:
         if (
@@ -289,15 +293,17 @@ def get_graph(devices_regex: Optional[str] = Query(None)) -> Dict[str, List[Dict
             pass
 
     formatted_links: Dict[str, Any] = {}
-    if devices_regex:
-        formatted_links = get_from_db_or_cache(f"formatted_links{devices_regex}")
+    if dpat:
+        formatted_links = get_from_db_or_cache(f"formatted_links{dpat}")
     else:
         formatted_links = get_from_db_or_cache("formatted_links")
     highest_uses: Dict[str, int] = defaultdict(int)
     if not formatted_links:
-        links: Iterable[Dict[str, Any]] = get_from_db_or_cache("links", get_all_links)
-        if devices_regex:
-            links = [link for link in links if devices_regex.lower() in link["device_name"].lower() and devices_regex.lower() in link["neighbor_name"].lower()]
+        links: Iterable[Dict[str, Any]] = []
+        if isinstance(dpat, list):
+            links = get_from_db_or_cache(f"links{str(dpat)}", get_links_by_patterns, dpat)
+        else:
+            links = get_from_db_or_cache("links", get_all_links)
         sorted_links: List[Dict[str, Any]] = sorted(
             links, key=lambda d: (d["device_name"], d["neighbor_name"])
         )
@@ -318,6 +324,9 @@ def get_graph(devices_regex: Optional[str] = Query(None)) -> Dict[str, List[Dict
             device: str = link["device_name"]
             iface: str = str(link["iface_name"])
             neigh: str = link["neighbor_name"]
+            if isinstance(dpat, list):
+                if not any(device_pattern in neigh for device_pattern in dpat):
+                    continue
             neigh_iface: str = str(link["neighbor_iface"])
             if not device or not iface or not neigh or not neigh_iface:
                 # Discard possible null ifaces
@@ -405,8 +414,8 @@ def get_graph(devices_regex: Optional[str] = Query(None)) -> Dict[str, List[Dict
         # logger.error(f'Format links End: {time() - start_format_timer}')
 
         global CACHE, CACHED_TIMEOUT
-        if devices_regex:
-            CACHE[f"formatted_links{devices_regex}"] = formatted_links
+        if dpat:
+            CACHE[f"formatted_links{dpat}"] = formatted_links
         else:
             CACHE["formatted_links"] = formatted_links
         CACHED_TIMEOUT["formatted_links"] = False
