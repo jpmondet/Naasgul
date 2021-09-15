@@ -26,15 +26,15 @@ from db_layer import prep_db_if_not_exist, get_node
 
 
 TEST_GRAPH_DATA: Dict[str, List[Dict[str, Any]]] = {}
-with open("tests/graph_datas.json") as graph_datas:
+with open("tests/graph_datas.json", encoding="UTF-8") as graph_datas:
     TEST_GRAPH_DATA = json.load(graph_datas)
 
 TEST_STATS_DATA: Dict[str, Dict[str, Dict[str, Any]]] = {}
-with open("tests/stats_datas.json") as stats_datas:
+with open("tests/stats_datas.json", encoding="UTF-8") as stats_datas:
     TEST_STATS_DATA = json.load(stats_datas)
 
 TEST_NEIGHS_DATA: List[Dict[str, str]] = []
-with open("tests/neighs_datas.json") as neighs_datas:
+with open("tests/neighs_datas.json", encoding="UTF-8") as neighs_datas:
     TEST_NEIGHS_DATA = json.load(neighs_datas)
 
 
