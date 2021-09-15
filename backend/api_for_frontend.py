@@ -42,6 +42,7 @@ from db_layer import (
     add_fake_iface_stats,
     add_fake_iface_utilization,
     delete_node,
+    disable_node,
 )
 
 app: FastAPI = FastAPI()
@@ -155,7 +156,7 @@ def add_static_node_to_db(node: Node, neigh_infos: Optional[List[Neighbor]] = No
     """Some nodes can't be scrapped with lldp so this function allows to add
     static nodes directly to db"""
 
-    add_node(node.name, node.groupx, node.groupy, node.image)
+    add_node(node.name, node.groupx, node.groupy, node.image, to_poll=False)
 
     if neigh_infos:
         for neigh in neigh_infos:
@@ -650,6 +651,25 @@ def add_nodes_list_to_poll(
 
     for node in nodes:
         add_node(node)
+
+    return {"response": "Ok"}
+
+@app.get("/disable_poll_nodes_list")
+def disable_poll_nodes_list(
+    nodes: List[str],
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> Dict[str, str]:
+    """Disable (snmp) polling on a list of nodes.
+
+    Exple of simplest call :
+    curl -X GET --user u:p -H "Content-type: application/json" \
+          http://127.0.0.1/api/disable_poll_nodes_list \
+              -d '["node1", "node2", "node3"]'"""
+
+    for node in nodes:
+        disable_node(node)
 
     return {"response": "Ok"}
 

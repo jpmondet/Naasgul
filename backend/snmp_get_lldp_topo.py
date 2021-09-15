@@ -52,7 +52,9 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
     # We add the device if it doesn't exist
     to_poll: bool = True  # If we have to continue polling this node
     last_poll: float = time()
-    nodes_list.append((query, {"device_name": dev_name, "to_poll": to_poll, "last_poll": last_poll}))
+    nodes_list.append(
+        (query, {"device_name": dev_name, "to_poll": to_poll, "last_poll": last_poll})
+    )
 
     for lldp_nei in lldp_infos:
         # Getting neigh node infos and adding it to nodes_list
