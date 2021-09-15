@@ -68,10 +68,17 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         neigh_ip: str = ".".join(neigh_ip_oid.split(".")[-4:])
 
         neigh_descr: str = ""
-        neigh_descr, _ = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_sys_descr']}*", yielded=True))
+        neigh_descr, _ = next(
+            search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_sys_descr']}*", yielded=True)
+        )
 
         query_neigh: Dict[str, str] = {"device_name": neigh_name}
-        nodes_list.append((query_neigh, {"device_name": neigh_name, "device_ip": neigh_ip, "device_descr": neigh_descr}))
+        nodes_list.append(
+            (
+                query_neigh,
+                {"device_name": neigh_name, "device_ip": neigh_ip, "device_descr": neigh_descr},
+            )
+        )
 
         # Getting neigh and local ifaces infos and adding them to link list
         local_iface: str = ""
@@ -79,7 +86,9 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         neigh_iface_descr: str = ""
         _, local_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_local_iface']}*", yielded=True))
         _, neigh_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface']}*", yielded=True))
-        _, neigh_descr = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface_descr']}*", yielded=True))
+        _, neigh_descr = next(
+            search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface_descr']}*", yielded=True)
+        )
         # Stripping "Et, Ethernet, E,... " which can be different per equipment
         dev_iface = "/".join(
             "".join(x)
