@@ -36,7 +36,7 @@ NEEDED_MIBS_FOR_LLDP: Dict[str, str] = {
     "lldp_neigh_ip": "1.0.8802.1.1.2.1.4.2.1",  # lldpRemManAddrEntry
     "lldp_local_iface": "1.0.8802.1.1.2.1.3.7.1.3",  # lldpLocPortId
     'lldp_neigh_sys_descr': '1.0.8802.1.1.2.1.4.1.1.10', # lldpRemSysDesc
-    #'lldp_neigh_iface_descr': '1.0.8802.1.1.2.1.4.1.1.8', # lldpRemPortDesc
+    'lldp_neigh_iface_descr': '1.0.8802.1.1.2.1.4.1.1.8', # lldpRemPortDesc
 }
 
 

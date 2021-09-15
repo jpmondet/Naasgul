@@ -76,8 +76,10 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         # Getting neigh and local ifaces infos and adding them to link list
         local_iface: str = ""
         neigh_iface: str = ""
+        neigh_iface_descr: str = ""
         _, local_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_local_iface']}*", yielded=True))
         _, neigh_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface']}*", yielded=True))
+        _, neigh_descr = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface_descr']}*", yielded=True))
         # Stripping "Et, Ethernet, E,... " which can be different per equipment
         dev_iface = "/".join(
             "".join(x)
@@ -95,6 +97,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
             "iface_name": dev_iface,
             "neighbor_name": neigh_name,
             "neighbor_iface": neigh_iface,
+            "neighbor_iface_descr": neigh_iface_descr,
         }
 
         if not dev_name or not dev_iface or not neigh_name or not neigh_iface:
