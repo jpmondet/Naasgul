@@ -8,7 +8,7 @@ from os import getenv
 import asyncio
 from itertools import groupby
 from time import sleep
-from typing import List, Dict, Tuple, Optional, Union
+from typing import List, Dict, Tuple, Optional, Union, Any
 from pymongo.errors import InvalidOperation  # type: ignore
 from pysnmp.error import PySnmpError  # type: ignore
 from pysnmp import hlapi  # type: ignore
@@ -37,12 +37,12 @@ INIT_NODE_PORT: str = getenv("LLDP_INIT_NODE_PORT", "161")
 STOP_NODES_FQDN: Optional[str] = getenv("STOP_NODES_FQDN")
 STOP_NODES_IP: Optional[str] = getenv("STOP_NODES_IP")
 NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
-NODES_PATTERNS: Optional[str] = getenv("NODES_PATTERNS")
+NODES_PATTERNS: Optional[str] = getenv("NODES_PATTERNS") # Patterns separated by a coma
 
 
 def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> None:
     """Format retrieved snmp datas & dumps them into db"""
-    nodes_list: List[Tuple[Dict[str, str], Dict[str, str]]] = []
+    nodes_list: List[Tuple[Dict[str, str], Dict[str, Any]]] = []
     links_list: List[Tuple[Dict[str, str], Dict[str, str]]] = []
 
     # Each item of the lists are composed by the "query" (so the DB knows which entry to update
@@ -50,7 +50,8 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
     dev_name: str = device_name.lower()
     query: Dict[str, str] = {"device_name": dev_name}
     # We add the device if it doesn't exist
-    nodes_list.append((query, query))
+    to_poll: bool = True # If we have to continue polling this node
+    nodes_list.append((query, {"device_name": dev_name, "to_poll": to_poll}))
 
     for lldp_nei in lldp_infos:
         # Getting neigh node infos and adding it to nodes_list
@@ -72,11 +73,14 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
             search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_sys_descr']}*", yielded=True)
         )
 
+        if NODES_PATTERNS:
+            if not any(device_pattern in neigh_name for device_pattern in NODES_PATTERNS.split()):
+                to_poll = False
         query_neigh: Dict[str, str] = {"device_name": neigh_name}
         nodes_list.append(
             (
                 query_neigh,
-                {"device_name": neigh_name, "device_ip": neigh_ip, "device_descr": neigh_descr},
+                {"device_name": neigh_name, "device_ip": neigh_ip, "device_descr": neigh_descr, "to_poll": to_poll},
             )
         )
 
@@ -167,6 +171,11 @@ def lldp_scrapping(
     for dev in scrapped:
         if "fake" in dev["device_name"]:
             continue
+        try:
+            if not dev["to_poll"]:
+                continue
+        except KeyError:
+            pass
         devices.append((dev["device_name"], "", 161))
 
     if not devices:
