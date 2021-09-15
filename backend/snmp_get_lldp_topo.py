@@ -8,7 +8,7 @@ from os import getenv
 import asyncio
 from itertools import groupby
 from time import sleep
-from typing import List, Dict, Tuple, Iterable, Optional, Union
+from typing import List, Dict, Tuple, Optional, Union
 from pymongo.errors import InvalidOperation  # type: ignore
 from pysnmp.error import PySnmpError  # type: ignore
 from pysnmp import hlapi  # type: ignore
@@ -19,6 +19,7 @@ from db_layer import (
     NODES_COLLECTION,
     LINKS_COLLECTION,
     get_all_nodes,
+    get_nodes_by_patterns,
 )
 from snmp_functions import (
     get_table,
@@ -36,6 +37,7 @@ INIT_NODE_PORT: str = getenv("LLDP_INIT_NODE_PORT", "161")
 STOP_NODES_FQDN: Optional[str] = getenv("STOP_NODES_FQDN")
 STOP_NODES_IP: Optional[str] = getenv("STOP_NODES_IP")
 NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
+NODES_PATTERNS: Optional[str] = getenv("NODES_PATTERNS")
 
 
 def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> None:
@@ -140,7 +142,11 @@ def lldp_scrapping(
     """Main lldp scrapping func that launch threads to scrap
     devices"""
 
-    scrapped: Iterable[Dict[str, str]] = get_all_nodes()
+    scrapped: List[Dict[str, str]] = []
+    if NODES_PATTERNS:
+        scrapped = get_nodes_by_patterns(NODES_PATTERNS.split(','))
+    else:
+        scrapped = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
     for dev in scrapped:
         if "fake" in dev["device_name"]:

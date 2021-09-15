@@ -8,7 +8,7 @@ import asyncio
 from itertools import groupby
 from binascii import hexlify
 from time import time, sleep
-from typing import List, Dict, Tuple, Iterable, Optional, Any, Union
+from typing import List, Dict, Tuple, Optional, Any, Union
 from pymongo.errors import InvalidOperation  # type: ignore
 from pysnmp.error import PySnmpError  # type: ignore
 from pysnmp import hlapi  # type: ignore
@@ -18,6 +18,7 @@ from db_layer import (
     bulk_update_collection,
     add_iface_stats,
     get_all_nodes,
+    get_nodes_by_patterns,
     get_latest_utilization,
     UTILIZATION_COLLECTION,
 )
@@ -34,6 +35,7 @@ SNMP_AUTH_PWD: Optional[str] = getenv("SNMP_AUTH_PWD")
 SNMP_PRIV_PWD: Optional[str] = getenv("SNMP_PRIV_PWD")
 TEST_CASE: Optional[str] = getenv("AUTOMAP_TEST_CASE")
 NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
+NODES_PATTERNS: Optional[str] = getenv("NODES_PATTERNS")
 
 
 def dump_results_to_db(  # pylint: disable=too-many-locals
@@ -159,7 +161,11 @@ def stats_scrapping(
 ) -> None:
     """Main ifaces(stats) scrapping func that launch threads to scrap
     devices"""
-    scrapped: Iterable[Dict[str, str]] = get_all_nodes()
+    scrapped: List[Dict[str, str]] = []
+    if NODES_PATTERNS:
+        scrapped = get_nodes_by_patterns(NODES_PATTERNS.split(','))
+    else:
+        scrapped = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
     if init_node_fqdn:
         # This is a pytest case
