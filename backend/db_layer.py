@@ -202,7 +202,7 @@ def add_iface_stats(stats: List[Dict[str, Any]]) -> None:
     STATS_COLLECTION.insert_many(stats)
 
 
-def add_node(
+def add_node(  # pylint: disable=too-many-arguments
     node_name: str,
     groupx: Optional[int] = 11,
     groupy: Optional[int] = 11,
@@ -214,7 +214,14 @@ def add_node(
 
     try:
         NODES_COLLECTION.insert_one(
-            {"device_name": node_name, "device_descr": node_description, "groupx": groupx, "groupy": groupy, "image": image, "to_poll": to_poll}
+            {
+                "device_name": node_name,
+                "device_descr": node_description,
+                "groupx": groupx,
+                "groupy": groupy,
+                "image": image,
+                "to_poll": to_poll,
+            }
         )
     except MDDPK:
         NODES_COLLECTION.update_many(
@@ -232,7 +239,14 @@ def add_node(
         )
 
 
-def add_link(node_name: str, neigh_name: str, local_iface: str, neigh_iface: str, local_iface_descr: Optional[str] = "", neigh_iface_descr: Optional[str] = "") -> None:
+def add_link(  # pylint: disable=too-many-arguments
+    node_name: str,
+    neigh_name: str,
+    local_iface: str,
+    neigh_iface: str,
+    local_iface_descr: Optional[str] = "",
+    neigh_iface_descr: Optional[str] = "",
+) -> None:
     """Tries to insert a link directly into db"""
 
     try:
@@ -248,7 +262,12 @@ def add_link(node_name: str, neigh_name: str, local_iface: str, neigh_iface: str
         )
     except MDDPK:
         LINKS_COLLECTION.update_many(
-            {"device_name": node_name, "neighbor_name": neigh_name, "iface_name": local_iface, "neighbor_iface": neigh_iface,},
+            {
+                "device_name": node_name,
+                "neighbor_name": neigh_name,
+                "iface_name": local_iface,
+                "neighbor_iface": neigh_iface,
+            },
             {
                 "$set": {
                     "device_name": node_name,
@@ -329,6 +348,7 @@ def delete_node(node_name: str) -> None:
     LINKS_COLLECTION.delete_many({"neighbor_name": node_name})
     STATS_COLLECTION.delete_many({"device_name": node_name})
     UTILIZATION_COLLECTION.delete_many({"neighbor_name": node_name})
+
 
 def disable_node(node_name: str) -> None:
     """Disable polling on a node"""

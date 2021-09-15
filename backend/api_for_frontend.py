@@ -654,6 +654,7 @@ def add_nodes_list_to_poll(
 
     return {"response": "Ok"}
 
+
 @app.get("/disable_poll_nodes_list")
 def disable_poll_nodes_list(
     nodes: List[str],
