@@ -37,7 +37,7 @@ INIT_NODE_PORT: str = getenv("LLDP_INIT_NODE_PORT", "161")
 STOP_NODES_FQDN: Optional[str] = getenv("STOP_NODES_FQDN")
 STOP_NODES_IP: Optional[str] = getenv("STOP_NODES_IP")
 NB_THREADS: str = getenv("AUTOMAP_NB_THREADS", "10")
-NODES_PATTERNS: Optional[str] = getenv("NODES_PATTERNS") # Patterns separated by a coma
+NODES_PATTERNS: Optional[str] = getenv("NODES_PATTERNS")  # Patterns separated by a coma
 
 
 def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> None:
@@ -50,7 +50,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
     dev_name: str = device_name.lower()
     query: Dict[str, str] = {"device_name": dev_name}
     # We add the device if it doesn't exist
-    to_poll: bool = True # If we have to continue polling this node
+    to_poll: bool = True  # If we have to continue polling this node
     nodes_list.append((query, {"device_name": dev_name, "to_poll": to_poll}))
 
     for lldp_nei in lldp_infos:
@@ -80,7 +80,12 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         nodes_list.append(
             (
                 query_neigh,
-                {"device_name": neigh_name, "device_ip": neigh_ip, "device_descr": neigh_descr, "to_poll": to_poll},
+                {
+                    "device_name": neigh_name,
+                    "device_ip": neigh_ip,
+                    "device_descr": neigh_descr,
+                    "to_poll": to_poll,
+                },
             )
         )
 
