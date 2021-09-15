@@ -7,7 +7,7 @@ Datas retrieved are stored into db."""
 from os import getenv
 import asyncio
 from itertools import groupby
-from time import sleep
+from time import sleep, time
 from typing import List, Dict, Tuple, Optional, Union, Any
 from pymongo.errors import InvalidOperation  # type: ignore
 from pysnmp.error import PySnmpError  # type: ignore
@@ -51,7 +51,8 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
     query: Dict[str, str] = {"device_name": dev_name}
     # We add the device if it doesn't exist
     to_poll: bool = True  # If we have to continue polling this node
-    nodes_list.append((query, {"device_name": dev_name, "to_poll": to_poll}))
+    last_poll: float = time()
+    nodes_list.append((query, {"device_name": dev_name, "to_poll": to_poll, "last_poll": last_poll}))
 
     for lldp_nei in lldp_infos:
         # Getting neigh node infos and adding it to nodes_list
@@ -158,7 +159,7 @@ async def get_device_lldp_infos(
         res: List[Dict[str, str]] = get_table(target, oids, credentials, port=port)
         dump_results_to_db(target_name, res)
     except (RuntimeError, PySnmpError) as err:
-        print(err, "\n (can't access to devices?) Passing for now...")
+        print(err, f"\n (can't access to device {target_name}?) Passing for now...")
 
 
 def lldp_scrapping(
