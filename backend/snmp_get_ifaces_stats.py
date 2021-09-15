@@ -173,6 +173,11 @@ def stats_scrapping(
     for device in scrapped:
         if "fake" in device["device_name"]:
             continue
+        try:
+            if not device["to_poll"]:
+                continue
+        except KeyError:
+            pass
         devices.append((device["device_name"], "", 161))
 
     if TEST_CASE:
