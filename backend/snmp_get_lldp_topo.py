@@ -120,6 +120,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         query_neigh_link: Dict[str, str] = {
             "device_name": neigh_name,
             "iface_name": neigh_iface,
+            "iface_descr": neigh_iface_descr,
             "neighbor_name": dev_name,
             "neighbor_iface": dev_iface,
         }
