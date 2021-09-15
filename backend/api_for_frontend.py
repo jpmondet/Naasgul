@@ -633,6 +633,7 @@ def add_static_node(
 
     return {"response": "Ok"}
 
+
 @app.get("/add_nodes_list_to_poll")
 def add_nodes_list_to_poll(
     nodes: List[str],
@@ -651,6 +652,7 @@ def add_nodes_list_to_poll(
         add_node(node)
 
     return {"response": "Ok"}
+
 
 @app.get("/healthz")
 def healthz() -> Dict[str, str]:

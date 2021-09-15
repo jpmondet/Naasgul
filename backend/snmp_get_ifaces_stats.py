@@ -163,7 +163,7 @@ def stats_scrapping(
     devices"""
     scrapped: List[Dict[str, str]] = []
     if NODES_PATTERNS:
-        scrapped = get_nodes_by_patterns(NODES_PATTERNS.split(','))
+        scrapped = get_nodes_by_patterns(NODES_PATTERNS.split(","))
     else:
         scrapped = get_all_nodes()
     devices: List[Tuple[str, str, int]] = []
