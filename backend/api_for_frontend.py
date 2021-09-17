@@ -11,7 +11,7 @@
             neighborships
         )
 """
-# pylint: disable=global-statement,logging-fstring-interpolation
+# pylint: disable=global-statement,global-variable-not-assigned,logging-fstring-interpolation
 
 import logging
 import re
@@ -20,12 +20,13 @@ from typing import Dict, List, Any, Optional, Callable, Tuple, Union
 from collections import defaultdict
 from time import strftime, localtime, time
 from secrets import compare_digest
+from yaml import safe_load as yamload, YAMLError
 
-from fastapi import Depends, FastAPI, HTTPException, status, Query
+from fastapi import Depends, FastAPI, HTTPException, status, Query, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.logger import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from db_layer import (
     get_stats_devices,
@@ -84,9 +85,11 @@ class Node(BaseModel):
     groupx: Optional[int] = 11  # Group (function) of the node
     groupy: Optional[int] = 11  # Group (localisation) of the node
     image: Optional[str] = "router.png"
+    system_description: Optional[str] = "" # Usually contains model & OS version
     # (Number that drives its placement on the graph. 0 is on the left,
     # 10 (or even more) on the right)
     ifaces: Optional[List[str]] = None
+    to_poll: Optional[bool] = True
 
 
 class Neighbor(BaseModel):
@@ -99,6 +102,23 @@ class Neighbor(BaseModel):
     node_iface: str  # This iface is the one of the actual node of
     # which this class instance is the neighbor
 
+class Link(BaseModel):
+    """Defines a link between 2 nodes.
+    Looks a lot like a neighbor definition"""
+
+    name_node1: str
+    iface_id_node1: str
+    iface_descr_node1: Optional[str]
+    name_node2: str
+    iface_id_node2: str
+    iface_descr_node2: Optional[str]
+
+
+class Fabric(BaseModel):
+    """Defines an entire fabric"""
+
+    nodes: List[Node]
+    links: List[Link]
 
 def check_credentials(
     credentials: HTTPBasicCredentials = Depends(security),
@@ -582,7 +602,7 @@ def neighborships(
     return neighs
 
 
-@app.get("/delete_node_by_fqdn")
+@app.post("/delete_node_by_fqdn")
 def delete_node_by_fqdn(
     credentials: HTTPBasicCredentials = Depends(
         check_credentials
@@ -601,7 +621,7 @@ def delete_node_by_fqdn(
     return {"response": "Ok"}
 
 
-@app.get("/add_static_node")
+@app.post("/add_static_node")
 def add_static_node(
     node: Node,
     node_neighbors: Optional[List[Neighbor]] = None,
@@ -635,7 +655,7 @@ def add_static_node(
     return {"response": "Ok"}
 
 
-@app.get("/add_nodes_list_to_poll")
+@app.post("/add_nodes_list_to_poll")
 def add_nodes_list_to_poll(
     nodes: List[str],
     credentials: HTTPBasicCredentials = Depends(
@@ -654,8 +674,36 @@ def add_nodes_list_to_poll(
 
     return {"response": "Ok"}
 
+@app.post(
+    "/fabric",
+    openapi_extra={
+        "requestBody": {
+            "content": {"application/x-yaml": {"schema": Fabric.schema()}},
+            "required": True,
+        },
+    },
+)
+async def add_fabric(request: Request):
+    """Add an entire fabric via a yaml file
+    with a call like :
+        curl -X POST --data-binary @payload.yaml \
+            -H "Content-type: application/x-yaml" http://127.0.0.1/api/fabric
+    """
+    raw_body = await request.body()
+    try:
+        data = yamload(raw_body)
+        logger.error(data)
+    except YAMLError as yamlerr:
+        raise HTTPException(status_code=422, detail="Invalid YAML") from yamlerr
+    try:
+        fabric = Fabric.parse_obj(data)
+        logger.error(fabric)
+    except ValidationError as validationerr:
+        raise HTTPException(status_code=422, detail=validationerr.errors()) from validationerr
+    #return fabric
+    return {"response": "Ok"}
 
-@app.get("/disable_poll_nodes_list")
+@app.post("/disable_poll_nodes_list")
 def disable_poll_nodes_list(
     nodes: List[str],
     credentials: HTTPBasicCredentials = Depends(
