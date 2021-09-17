@@ -114,7 +114,7 @@ def fetch(
                         items[str(var_bind[0])] = cast(var_bind[1])
                     result.append(items)
                 else:
-                    raise RuntimeError("Got SNMP error: {0}".format(error_indication))
+                    raise RuntimeError(f"Got SNMP error: {error_indication}")
             except StopIteration:
                 break
     return result
