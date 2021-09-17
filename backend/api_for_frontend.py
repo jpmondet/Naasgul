@@ -686,7 +686,7 @@ def add_nodes_list_to_poll(
         },
     },
 )
-async def add_fabric(request: Request):
+async def add_fabric(request: Request) -> Dict[str, str]:
     """Add an entire fabric via a yaml file
     with a call like :
         curl -X POST --data-binary @payload.yaml \
