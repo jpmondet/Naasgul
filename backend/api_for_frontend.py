@@ -717,6 +717,37 @@ async def add_fabric(request: Request) -> Dict[str, str]:
         )
     return {"response": "Ok"}
 
+@app.delete(
+    "/fabric",
+    openapi_extra={
+        "requestBody": {
+            "content": {"application/x-yaml": {"schema": Fabric.schema()}},
+            "required": True,
+        },
+    },
+)
+async def delete_fabric(request: Request) -> Dict[str, str]:
+    """Delete an entire fabric via a yaml file
+    with a call like :
+        curl -X DELETE --data-binary @payload.yaml \
+            -H "Content-type: application/x-yaml" http://127.0.0.1/api/fabric
+    """
+    raw_body = await request.body()
+    try:
+        data = yamload(raw_body)
+    except YAMLError as yamlerr:
+        raise HTTPException(status_code=422, detail="Invalid YAML") from yamlerr
+    try:
+        fabric = Fabric.parse_obj(data)
+    except ValidationError as validationerr:
+        raise HTTPException(status_code=422, detail=validationerr.errors()) from validationerr
+
+    for node in fabric.nodes:
+        delete_node(
+            node.name
+        )
+    return {"response": "Ok"}
+
 
 @app.post("/disable_poll_nodes_list")
 def disable_poll_nodes_list(
