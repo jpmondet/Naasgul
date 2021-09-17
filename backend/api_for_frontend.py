@@ -686,7 +686,12 @@ def add_nodes_list_to_poll(
         },
     },
 )
-async def add_fabric(request: Request) -> Dict[str, str]:
+async def add_fabric(
+    request: Request,
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> Dict[str, str]:
     """Add an entire fabric via a yaml file
     with a call like :
         curl -X POST --data-binary @payload.yaml \
@@ -727,7 +732,12 @@ async def add_fabric(request: Request) -> Dict[str, str]:
         },
     },
 )
-async def delete_fabric(request: Request) -> Dict[str, str]:
+async def delete_fabric(
+    request: Request,
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> Dict[str, str]:
     """Delete an entire fabric via a yaml file
     with a call like :
         curl -X DELETE --data-binary @payload.yaml \
