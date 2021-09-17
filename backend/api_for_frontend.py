@@ -85,7 +85,7 @@ class Node(BaseModel):
     groupx: Optional[int] = 11  # Group (function) of the node
     groupy: Optional[int] = 11  # Group (localisation) of the node
     image: Optional[str] = "router.png"
-    system_description: Optional[str] = "" # Usually contains model & OS version
+    system_description: Optional[str] = ""  # Usually contains model & OS version
     # (Number that drives its placement on the graph. 0 is on the left,
     # 10 (or even more) on the right)
     ifaces: Optional[List[str]] = None
@@ -101,6 +101,7 @@ class Neighbor(BaseModel):
     iface: str  # This is the actual iface of the class instance (neighbor)
     node_iface: str  # This iface is the one of the actual node of
     # which this class instance is the neighbor
+
 
 class Link(BaseModel):
     """Defines a link between 2 nodes.
@@ -119,6 +120,7 @@ class Fabric(BaseModel):
 
     nodes: List[Node]
     links: List[Link]
+
 
 def check_credentials(
     credentials: HTTPBasicCredentials = Depends(security),
@@ -674,6 +676,7 @@ def add_nodes_list_to_poll(
 
     return {"response": "Ok"}
 
+
 @app.post(
     "/fabric",
     openapi_extra={
@@ -700,10 +703,20 @@ async def add_fabric(request: Request):
         raise HTTPException(status_code=422, detail=validationerr.errors()) from validationerr
 
     for node in fabric.nodes:
-        add_node(node.name, node.groupx, node.groupy, node.image, node.system_description, node.to_poll)
+        add_node(
+            node.name, node.groupx, node.groupy, node.image, node.system_description, node.to_poll
+        )
     for link in fabric.links:
-        add_link(link.name_node1, link.name_node2, link.iface_id_node1, link.iface_id_node2, link.iface_descr_node1, link.iface_descr_node2)
+        add_link(
+            link.name_node1,
+            link.name_node2,
+            link.iface_id_node1,
+            link.iface_id_node2,
+            link.iface_descr_node1,
+            link.iface_descr_node2,
+        )
     return {"response": "Ok"}
+
 
 @app.post("/disable_poll_nodes_list")
 def disable_poll_nodes_list(
