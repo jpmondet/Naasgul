@@ -9,4 +9,5 @@ scalene
 nodeenv
 coverage-badge
 anybadge
+types-PyYaml
 -r backend/requirements.txt
