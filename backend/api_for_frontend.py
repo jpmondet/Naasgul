@@ -717,6 +717,7 @@ async def add_fabric(request: Request) -> Dict[str, str]:
         )
     return {"response": "Ok"}
 
+
 @app.delete(
     "/fabric",
     openapi_extra={
@@ -743,9 +744,7 @@ async def delete_fabric(request: Request) -> Dict[str, str]:
         raise HTTPException(status_code=422, detail=validationerr.errors()) from validationerr
 
     for node in fabric.nodes:
-        delete_node(
-            node.name
-        )
+        delete_node(node.name)
     return {"response": "Ok"}
 
 
