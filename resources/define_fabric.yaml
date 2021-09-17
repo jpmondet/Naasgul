@@ -5,39 +5,38 @@
 # Those nodes can then (or not) be to_polled to get interfaces stats
 
 nodes:
-  - device_name: my-Pnode-1
-    device_ip: 1.1.1.1 # Optional
-    device_system: C6500 - IOS 15.1 # Optional
+  - name: my-Pnode-1
+    addr: 1.1.1.1 # Optional
+    system_description: C6500 - IOS 15.1 # Optional
     # Where the node should be on the graph ?
     groupx: 1 # Optional, 1 being left, ~11 being far right
     groupy: 1 # Optional, 1 being bottom, >1 going up
     to_poll: True # Optional. Never poll the node if False
-  - device_name: my-Pnode-2
-    device_ip: 1.1.1.2 # Optional
-    device_system: C6500 - IOS 15.1 # Optional
+  - name: my-Pnode-2
+    addr: 1.1.1.2 # Optional
+    system_description: C6500 - IOS 15.1 # Optional
     # Where the node should be on the graph ?
     groupx: 1 # Optional, 1 being left, ~11 being far right
     groupy: 2 # Optional, 1 being bottom, >1 going up
     to_poll: True # Optional. Never poll the node if False
-  - device_name: my-PEnode-1
-    device_ip: 1.1.1.3 # Optional
-    device_system: C6500 - IOS 15.1 # Optional
+  - name: my-PEnode-1
+    addr: 1.1.1.3 # Optional
+    system_description: C6500 - IOS 15.1 # Optional
     # Where the node should be on the graph ?
     groupx: 2 # Optional, 1 being left, ~11 being far right
     groupy: 1 # Optional, 1 being bottom, >1 going up
     to_poll: True # Optional. Never poll the node if False
-  - device_name: my-PEnode-2
-    device_ip: 1.1.1.4 # Optional
-    device_system: C6500 - IOS 15.1 # Optional
+  - name: my-PEnode-2
+    addr: 1.1.1.4 # Optional
+    system_description: C6500 - IOS 15.1 # Optional
     # Where the node should be on the graph ?
     groupx: 2 # Optional, 1 being left, ~11 being far right
     groupy: 2 # Optional, 1 being bottom, >1 going up
     to_poll: True # Optional. Never poll the node if False
 links:
-  - device_name: my-Pnode-1
-    iface_id: 1/1 # Do not add 'Ethernet' or something. Only int & slash
-    iface_description: link to PE
-    neighbor_name: my-PEnode-1
-    neighbor_iface: 1/4
-    neighbor_iface_descr: Link to P
-  - ... 
+  - name_node1: my-Pnode-1
+    iface_id_node1: 1/1 # Do not add 'Ethernet' or something. Only int & slash
+    iface_descr_node1: link to PE
+    name_node2: my-PEnode-1
+    iface_id_node2: 1/4
+    iface_descr_node2: Link to P
