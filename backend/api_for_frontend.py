@@ -692,15 +692,17 @@ async def add_fabric(request: Request):
     raw_body = await request.body()
     try:
         data = yamload(raw_body)
-        logger.error(data)
     except YAMLError as yamlerr:
         raise HTTPException(status_code=422, detail="Invalid YAML") from yamlerr
     try:
         fabric = Fabric.parse_obj(data)
-        logger.error(fabric)
     except ValidationError as validationerr:
         raise HTTPException(status_code=422, detail=validationerr.errors()) from validationerr
-    #return fabric
+
+    for node in fabric.nodes:
+        add_node(node.name, node.groupx, node.groupy, node.image, node.system_description, node.to_poll)
+    for link in fabric.links:
+        add_link(link.name_node1, link.name_node2, link.iface_id_node1, link.iface_id_node2, link.iface_descr_node1, link.iface_descr_node2)
     return {"response": "Ok"}
 
 @app.post("/disable_poll_nodes_list")
