@@ -370,7 +370,9 @@ async def test_add_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    bfabric = open("tests/define_fabric.yaml", "rb") # typing: ignore
+    bfabric: bytes = b'0'
+    with open("tests/define_fabric.yaml", "rb") as rbfabric:
+        bfabric = rbfabric.read()
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
         response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
@@ -407,9 +409,9 @@ async def test_delete_fabric() -> None:
         response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
     assert response.status_code == 200
 
-    #async with AsyncClient(app=app, base_url="http://test") as aclient:
-    #    response = await aclient.delete("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
-    #assert response.status_code == 200
+    async with AsyncClient(app=app, base_url="http://test") as aclient:
+        response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, json=bfabric, auth=("user", "pass"))
+    assert response.status_code == 200
 
     yfabric: Dict[str, List[Dict[str, Any]]] = {}
     with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
@@ -424,3 +426,24 @@ async def test_delete_fabric() -> None:
             link["name_node2"],
             link["iface_id_node2"],
         )
+
+
+def test_disable_nodes_list() -> None:
+    """Adds nodes list, Disable them and
+    verify that they
+    are correctly disabled (to_poll==False)"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    nodes_list = ["aaa", "bbb", "ccc"]
+
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
+
+    add_nodes_list_to_poll(nodes_list, creds)
+
+    disable_poll_nodes_list(nodes_list)
+
+    for node in nodes_list:
+        db_node: Dict[str, Any] = get_node(node)
+        assert not db_node["to_poll"]
