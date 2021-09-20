@@ -664,11 +664,11 @@ def add_nodes_list_to_poll(
         check_credentials
     ),  # pylint: disable=unused-argument
 ) -> Dict[str, str]:
-    """Adds a list a nodes (that are discoverables with lldp) to the db.
+    """Adds a list of nodes (that are discoverables with lldp) to the db.
 
     Exple of simplest call :
     curl -X POST --user u:p -H "Content-type: application/json" \
-          http://127.0.0.1/api/add_nodes_list_to_poll \
+          http://127.0.0.1/api/nodes \
               -d '["node1", "node2", "node3"]'"""
 
     for node in nodes:
@@ -684,16 +684,48 @@ def delete_nodes_list_to_poll(
         check_credentials
     ),  # pylint: disable=unused-argument
 ) -> Dict[str, str]:
-    """Deletes a list a nodes (that are discoverables with lldp) to the db.
+    """Deletes a list of nodes (that are discoverables with lldp) to the db.
 
     Exple of simplest call :
     curl -X DELETE --user u:p -H "Content-type: application/json" \
-          http://127.0.0.1/api/add_nodes_list_to_poll \
+          http://127.0.0.1/api/nodes \
               -d '["node1", "node2", "node3"]'"""
 
     for node in nodes:
         delete_node(node)
 
+    return {"response": "Ok"}
+
+@app.post("/links")
+def add_links(
+    links: List[Link],
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> Dict[str, str]:
+    """Adds a list of links to the db.
+
+    Exple of simplest call :
+    curl -X POST --user u:p -H "Content-type: application/json" \
+          http://127.0.0.1/api/links \
+              -d '[ 
+                   {
+                     "name_node1": "node1",
+                     "name_node2": "node2",
+                     "iface_id_node1": "1/1",
+                     "iface_id_node2": "2/2"
+                    }
+                   ]'"""
+
+    for link in links:
+        add_link(
+            link.name_node1,
+            link.name_node2,
+            link.iface_id_node1,
+            link.iface_id_node2,
+            link.iface_descr_node1,
+            link.iface_descr_node2,
+        )
     return {"response": "Ok"}
 
 
