@@ -696,6 +696,7 @@ def delete_nodes_list_to_poll(
 
     return {"response": "Ok"}
 
+
 @app.post("/links")
 def add_links(
     links: List[Link],
@@ -708,7 +709,7 @@ def add_links(
     Exple of simplest call :
     curl -X POST --user u:p -H "Content-type: application/json" \
           http://127.0.0.1/api/links \
-              -d '[ 
+              -d '[
                    {
                      "name_node1": "node1",
                      "name_node2": "node2",
@@ -726,6 +727,32 @@ def add_links(
             link.iface_descr_node1,
             link.iface_descr_node2,
         )
+    return {"response": "Ok"}
+
+
+@app.delete("/links")
+def delete_links(
+    links: List[Link],
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> Dict[str, str]:
+    """Deletes a list of links to the db.
+
+    Exple of simplest call :
+    curl -X DELETE --user u:p -H "Content-type: application/json" \
+          http://127.0.0.1/api/links \
+              -d '[
+                   {
+                     "name_node1": "node1",
+                     "name_node2": "node2",
+                     "iface_id_node1": "1/1",
+                     "iface_id_node2": "2/2"
+                    }
+                   ]'"""
+
+    for link in links:
+        delete_links(link)
     return {"response": "Ok"}
 
 
