@@ -350,6 +350,49 @@ def delete_node(node_name: str) -> None:
     UTILIZATION_COLLECTION.delete_many({"neighbor_name": node_name})
 
 
+def delete_link(
+    node_name: str,
+    neigh_name: str,
+    local_iface: str,
+    neigh_iface: str,
+) -> None:
+    """Deletes everything related to a specific node from db.
+    (everything means node, links, stats & utilizations entries)"""
+
+    LINKS_COLLECTION.delete_one(
+        {
+            "device_name": node_name,
+            "neighbor_name": neigh_name,
+            "iface_name": local_iface,
+            "neighbor_iface": neigh_iface,
+        }
+    )
+    STATS_COLLECTION.delete_many(
+        {
+            "device_name": node_name,
+            "iface_name": local_iface,
+        }
+    )
+    STATS_COLLECTION.delete_many(
+        {
+            "device_name": neigh_name,
+            "iface_name": neigh_iface,
+        }
+    )
+    UTILIZATION_COLLECTION.delete_many(
+        {
+            "device_name": node_name,
+            "iface_name": local_iface,
+        }
+    )
+    UTILIZATION_COLLECTION.delete_many(
+        {
+            "device_name": neigh_name,
+            "iface_name": neigh_iface,
+        }
+    )
+
+
 def disable_node(node_name: str) -> None:
     """Disable polling on a node"""
 
