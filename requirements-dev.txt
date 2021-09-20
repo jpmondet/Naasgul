@@ -2,6 +2,7 @@ pylint
 pytest
 pytest-cov
 pytest-mock
+pytest-asyncio
 black
 mypy
 bandit

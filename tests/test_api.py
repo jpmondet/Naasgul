@@ -359,8 +359,8 @@ def test_delete_links() -> None:
         link.iface_id_node2,
     )
 
-
-def test_add_fabric() -> None:
+@pytest.mark.asyncio
+async def test_add_fabric() -> None:
     """Adds a fabric (yaml file) and
     verify that everything is
     correctly added to the db"""
@@ -374,7 +374,7 @@ def test_add_fabric() -> None:
 
     creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
 
-    add_fabric(yaml.dump(yfabric), creds)
+    await add_fabric(yaml.dump(yfabric), creds)
 
     for node in yfabric["nodes"]:
         assert get_node(node["name"])
