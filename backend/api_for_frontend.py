@@ -636,7 +636,7 @@ def add_static_node(
     in some cases)
 
     Exple of simplest call :
-    curl -X GET --user u:p -H "Content-type: application/json" \
+    curl -X POST --user u:p -H "Content-type: application/json" \
           http://127.0.0.1/api/add_static_node \
               -d '{ "node": { "name": "test", "ifaces": ["1/1","1/2"]} }'"""
 
@@ -657,7 +657,7 @@ def add_static_node(
     return {"response": "Ok"}
 
 
-@app.post("/add_nodes_list_to_poll")
+@app.post("/nodes")
 def add_nodes_list_to_poll(
     nodes: List[str],
     credentials: HTTPBasicCredentials = Depends(
@@ -667,12 +667,32 @@ def add_nodes_list_to_poll(
     """Adds a list a nodes (that are discoverables with lldp) to the db.
 
     Exple of simplest call :
-    curl -X GET --user u:p -H "Content-type: application/json" \
+    curl -X POST --user u:p -H "Content-type: application/json" \
           http://127.0.0.1/api/add_nodes_list_to_poll \
               -d '["node1", "node2", "node3"]'"""
 
     for node in nodes:
         add_node(node)
+
+    return {"response": "Ok"}
+
+
+@app.delete("/nodes")
+def delete_nodes_list_to_poll(
+    nodes: List[str],
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> Dict[str, str]:
+    """Deletes a list a nodes (that are discoverables with lldp) to the db.
+
+    Exple of simplest call :
+    curl -X DELETE --user u:p -H "Content-type: application/json" \
+          http://127.0.0.1/api/add_nodes_list_to_poll \
+              -d '["node1", "node2", "node3"]'"""
+
+    for node in nodes:
+        delete_node(node)
 
     return {"response": "Ok"}
 
