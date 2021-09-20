@@ -8,6 +8,7 @@ from typing import Dict, List, Any
 import json
 import yaml
 import pytest
+from httpx import AsyncClient
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
@@ -15,6 +16,7 @@ from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/../backend/"))
 # pylint:disable=import-error, wrong-import-position
 from api_for_frontend import (
+    app,
     get_graph,
     stats,
     neighborships,
@@ -374,7 +376,9 @@ async def test_add_fabric() -> None:
 
     creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
 
-    await add_fabric(yaml.dump(yfabric), creds)
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        response = await ac.post("/fabric", payload=yfabric, auth=creds)
+    assert response.status_code == 200
 
     for node in yfabric["nodes"]:
         assert get_node(node["name"])
