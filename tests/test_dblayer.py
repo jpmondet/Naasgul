@@ -71,6 +71,8 @@ def test_get_all_links() -> None:
         "neighbor_name": neigh_name,
         "iface_name": iface_name,
         "neighbor_iface": neigh_iface_name,
+        "iface_descr": "",
+        "neighbor_iface_descr": "",
     }
 
 

@@ -6,6 +6,7 @@ import sys
 import os
 from typing import Dict, List, Any
 import json
+import yaml
 import pytest
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBasicCredentials
@@ -19,10 +20,19 @@ from api_for_frontend import (
     neighborships,
     Node,
     Neighbor,
+    Link,
     add_static_node,
     delete_node_by_fqdn,
+    add_nodes_list_to_poll,
+    delete_nodes_list,
+    add_links,
+    delete_links,
+    add_fabric,
+    delete_fabric,
+    disable_poll_nodes_list,
+    healthz
 )
-from db_layer import prep_db_if_not_exist, get_node
+from db_layer import prep_db_if_not_exist, get_node, get_link
 
 
 TEST_GRAPH_DATA: Dict[str, List[Dict[str, Any]]] = {}
@@ -255,3 +265,123 @@ def test_delete_node_by_fqdn() -> None:
     delete_node_by_fqdn(creds, node_name)
 
     assert not get_node(node_name)
+
+
+def test_add_nodes_list_to_poll() -> None:
+    """Adds nodes list and check that they
+    are correctly added to the db"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    nodes_list = ["aaa", "bbb", "ccc"]
+
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
+
+    add_nodes_list_to_poll(nodes_list, creds)
+
+    for node in nodes_list:
+        assert get_node(node)
+
+
+def test_delete_nodes_list() -> None:
+    """Adds nodes list, deletes them and
+    verify that they
+    are correctly deleted from the db"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    nodes_list = ["aaa", "bbb", "ccc"]
+
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
+
+    add_nodes_list_to_poll(nodes_list, creds)
+
+    delete_nodes_list(nodes_list)
+
+    for node in nodes_list:
+        assert not get_node(node)
+
+
+def test_add_links() -> None:
+    """Adds links and
+    verify that they
+    are correctly added to the db"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    link: Link = Link(
+        name_node1="aaa",
+        iface_id_node1="11/11",
+        name_node2="bbb",
+        iface_id_node2="22/22",
+    )
+
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
+
+    add_links([link], creds)
+
+    assert get_link(
+        link.name_node1,
+        link.iface_id_node1,
+        link.name_node2,
+        link.iface_id_node2,
+    )
+
+
+def test_delete_links() -> None:
+    """Adds and deletes links and
+    verify that they
+    are correctly deleted from the db"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    link: Link = Link(
+        name_node1="aaa",
+        iface_id_node1="11/11",
+        name_node2="bbb",
+        iface_id_node2="22/22",
+    )
+
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
+
+    add_links([link], creds)
+
+    delete_links([link], creds)
+
+    assert not get_link(
+        link.name_node1,
+        link.iface_id_node1,
+        link.name_node2,
+        link.iface_id_node2,
+    )
+
+
+def test_add_fabric() -> None:
+    """Adds a fabric (yaml file) and
+    verify that everything is
+    correctly added to the db"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    yfabric: Dict[str, List[Dict[str, Any]]] = {}
+    with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
+        yfabric = yaml.load(yml)
+
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
+
+    add_fabric(yaml.dump(yfabric), creds)
+
+    for node in yfabric["nodes"]:
+        assert get_node(node["name"])
+    for link in yfabric["links"]:
+        assert get_link(
+            link["name_node1"],
+            link["iface_id_node1"],
+            link["name_node2"],
+            link["iface_id_node2"],
+        )
