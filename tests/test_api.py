@@ -370,11 +370,16 @@ async def test_add_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    yfabric: Dict[str, Any] = {'file': ('fabric.yaml', open("tests/define_fabric.yaml", "rb"), "application/x-yaml")}
+
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
-        response = await aclient.post("/fabric", files=yfabric, auth=("user", "pass"))
+        with open("tests/define_fabric.yaml", "rb") as bfabric:
+            response = await aclient.post("/fabric", headers={"Content-type": "application/json"}, content=bfabric, auth=("user", "pass"))
     assert response.status_code == 200
+
+    yfabric: Dict[str, List[Dict[str, Any]]] = {}
+    with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
+        yfabric = yaml.load(yml)
 
     for node in yfabric["nodes"]:
         assert get_node(node["name"])
