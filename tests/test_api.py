@@ -370,7 +370,7 @@ async def test_add_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    yfabric: Dict[str, Any] = {'file': (open("tests/define_fabric.yaml", "rb"), "application/x-yaml")}
+    yfabric: Dict[str, Any] = {'file': ('fabric.yaml', open("tests/define_fabric.yaml", "rb"), "application/x-yaml")}
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
         response = await aclient.post("/fabric", files=yfabric, auth=("user", "pass"))
