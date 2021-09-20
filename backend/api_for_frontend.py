@@ -43,6 +43,7 @@ from db_layer import (
     add_fake_iface_stats,
     add_fake_iface_utilization,
     delete_node,
+    delete_link,
     disable_node,
 )
 
@@ -752,7 +753,12 @@ def delete_links(
                    ]'"""
 
     for link in links:
-        delete_links(link)
+        delete_link(
+            link.name_node1,
+            link.name_node2,
+            link.iface_id_node1,
+            link.iface_id_node2,
+        )
     return {"response": "Ok"}
 
 
