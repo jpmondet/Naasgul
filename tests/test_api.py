@@ -370,14 +370,16 @@ async def test_add_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    yfabric: Dict[str, List[Dict[str, Any]]] = {}
-    with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
-        yfabric = yaml.load(yml)
+    #yfabric: Dict[str, List[Dict[str, Any]]] = {}
+    #with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
+    #    yfabric = yaml.load(yml)
+    
+    yfabric: Dict[str, Any] = {'file': open("tests/define_fabric.yaml", "rb")}
 
     creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
 
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.post("/fabric", payload=yfabric, auth=creds)
+    async with AsyncClient(app=app, base_url="http://test") as aclient:
+        response = await aclient.post("/fabric", files=yfabric, auth=creds)
     assert response.status_code == 200
 
     for node in yfabric["nodes"]:
