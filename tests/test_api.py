@@ -370,11 +370,10 @@ async def test_add_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-
+    bfabric = open("tests/define_fabric.yaml", "rb") # typing: ignore
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
-        with open("tests/define_fabric.yaml", "rb") as bfabric:
-            response = await aclient.post("/fabric", headers={"Content-type": "application/json"}, content=bfabric, auth=("user", "pass"))
+        response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
     assert response.status_code == 200
 
     yfabric: Dict[str, List[Dict[str, Any]]] = {}
@@ -385,6 +384,41 @@ async def test_add_fabric() -> None:
         assert get_node(node["name"])
     for link in yfabric["links"]:
         assert get_link(
+            link["name_node1"],
+            link["iface_id_node1"],
+            link["name_node2"],
+            link["iface_id_node2"],
+        )
+
+
+@pytest.mark.asyncio
+async def test_delete_fabric() -> None:
+    """Adds a fabric (yaml file),
+    deletes it and
+    verify that everything is
+    correctly added to the db"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    bfabric = open("tests/define_fabric.yaml", "rb") # typing: ignore
+
+    async with AsyncClient(app=app, base_url="http://test") as aclient:
+        response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
+    assert response.status_code == 200
+
+    #async with AsyncClient(app=app, base_url="http://test") as aclient:
+    #    response = await aclient.delete("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
+    #assert response.status_code == 200
+
+    yfabric: Dict[str, List[Dict[str, Any]]] = {}
+    with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
+        yfabric = yaml.load(yml)
+
+    for node in yfabric["nodes"]:
+        assert not get_node(node["name"])
+    for link in yfabric["links"]:
+        assert not get_link(
             link["name_node1"],
             link["iface_id_node1"],
             link["name_node2"],
