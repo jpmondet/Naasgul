@@ -786,7 +786,7 @@ async def add_fabric(
     try:
         data = yamload(raw_body)
     except YAMLError as yamlerr:
-        raise HTTPException(status_code=422, detail="Invalid YAML") from yamlerr
+        raise HTTPException(status_code=400, detail="Invalid YAML") from yamlerr
     try:
         fabric = Fabric.parse_obj(data)
     except ValidationError as validationerr:

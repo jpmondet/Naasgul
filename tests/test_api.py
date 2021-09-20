@@ -8,7 +8,7 @@ from typing import Dict, List, Any
 import json
 import yaml
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient # type: ignore
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
@@ -370,7 +370,7 @@ async def test_add_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    yfabric: Dict[str, Any] = {'file': open("tests/define_fabric.yaml", "rb")}
+    yfabric: Dict[str, Any] = {'file': (open("tests/define_fabric.yaml", "rb"), "application/x-yaml")}
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
         response = await aclient.post("/fabric", files=yfabric, auth=("user", "pass"))
