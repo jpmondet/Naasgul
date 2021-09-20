@@ -679,7 +679,7 @@ def add_nodes_list_to_poll(
 
 
 @app.delete("/nodes")
-def delete_nodes_list_to_poll(
+def delete_nodes_list(
     nodes: List[str],
     credentials: HTTPBasicCredentials = Depends(
         check_credentials
