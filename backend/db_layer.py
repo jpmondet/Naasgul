@@ -315,14 +315,14 @@ timestamp: float = time(), prev_timestamp: float = 0) -> None:
     )
 
 
-def add_fake_iface_stats(device_name: str, iface_name: str) -> None:
+def add_fake_iface_stats(device_name: str, iface_name: str, timestamp: float = time(), in_bytes: int = 0, out_bytes: int = 0) -> None:
     """Inserts fake stats for a specific interface into db"""
 
     STATS_COLLECTION.insert_one(
         {
             "device_name": f"{device_name}",
             "iface_name": f"{iface_name}",
-            "timestamp": int(time()),
+            "timestamp": int(timestamp),
             "mtu": 1500,
             "mac": "",
             "speed": 10,
@@ -330,11 +330,11 @@ def add_fake_iface_stats(device_name: str, iface_name: str) -> None:
             "in_errors": 0,
             "out_discards": 0,
             "out_errors": 0,
-            "in_bytes": 0,
+            "in_bytes": in_bytes,
             "in_ucast_pkts": 0,
             "in_mcast_pkts": 0,
             "in_bcast_pkts": 0,
-            "out_bytes": 0,
+            "out_bytes": out_bytes,
             "out_ucast_pkts": 0,
             "out_mcast_pkts": 0,
             "out_bcast_pkts": 0,

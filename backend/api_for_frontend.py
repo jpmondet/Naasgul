@@ -167,12 +167,12 @@ def background_time_update() -> None:
     have to discard cached datas and retrieve from db again"""
     global CACHED_TIMEOUT, TIME
     now: int = int(time())
-    logger.error(f"bgtimeupd: {now}, {TIME}, {CACHED_TIMEOUT}")
+    # logger.error(f"bgtimeupd: {now}, {TIME}, {CACHED_TIMEOUT}")
     if now - TIME > CACHED_TIME:
         TIME = now
         for elem in CACHED_TIMEOUT:
             CACHED_TIMEOUT[elem] = True
-    logger.error(f"bgtimeupdEnd: {now}, {TIME}, {CACHED_TIMEOUT}")
+    # logger.error(f"bgtimeupdEnd: {now}, {TIME}, {CACHED_TIMEOUT}")
 
 
 def add_static_node_to_db(node: Node, neigh_infos: Optional[List[Neighbor]] = None) -> None:
