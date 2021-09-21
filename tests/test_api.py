@@ -8,7 +8,7 @@ from typing import Dict, List, Any
 import json
 import yaml
 import pytest
-from httpx import AsyncClient # type: ignore
+from httpx import AsyncClient  # type: ignore
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
@@ -30,7 +30,7 @@ from api_for_frontend import (
     add_links,
     delete_links,
     disable_poll_nodes_list,
-    healthz
+    healthz,
 )
 from db_layer import prep_db_if_not_exist, get_node, get_link
 
@@ -359,6 +359,7 @@ def test_delete_links() -> None:
         link.iface_id_node2,
     )
 
+
 @pytest.mark.asyncio
 async def test_add_fabric() -> None:
     """Adds a fabric (yaml file) and
@@ -368,12 +369,17 @@ async def test_add_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    bfabric: bytes = b'0'
+    bfabric: bytes = b"0"
     with open("tests/define_fabric.yaml", "rb") as rbfabric:
         bfabric = rbfabric.read()
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
-        response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
+        response = await aclient.post(
+            "/fabric",
+            headers={"Content-type": "application/x-yaml"},
+            content=bfabric,
+            auth=("user", "pass"),
+        )
     assert response.status_code == 200
 
     yfabric: Dict[str, List[Dict[str, Any]]] = {}
@@ -401,14 +407,24 @@ async def test_delete_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    bfabric = open("tests/define_fabric.yaml", "rb") # typing: ignore
+    bfabric = open("tests/define_fabric.yaml", "rb")  # typing: ignore
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
-        response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, content=bfabric, auth=("user", "pass"))
+        response = await aclient.post(
+            "/fabric",
+            headers={"Content-type": "application/x-yaml"},
+            content=bfabric,
+            auth=("user", "pass"),
+        )
     assert response.status_code == 200
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
-        response = await aclient.post("/fabric", headers={"Content-type": "application/x-yaml"}, json=bfabric, auth=("user", "pass"))
+        response = await aclient.post(
+            "/fabric",
+            headers={"Content-type": "application/x-yaml"},
+            json=bfabric,
+            auth=("user", "pass"),
+        )
     assert response.status_code == 200
 
     yfabric: Dict[str, List[Dict[str, Any]]] = {}

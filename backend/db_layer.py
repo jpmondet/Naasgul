@@ -89,7 +89,9 @@ def get_all_links() -> List[Dict[str, Any]]:
     return get_entire_collection(LINKS_COLLECTION)
 
 
-def get_link(name_node1: str, iface_id_node1: str, name_node2: str, iface_id_node2: str) -> Dict[str, Any]:
+def get_link(
+    name_node1: str, iface_id_node1: str, name_node2: str, iface_id_node2: str
+) -> Dict[str, Any]:
     """Returns a single exact link from the db"""
     return LINKS_COLLECTION.find_one(
         {
