@@ -29,8 +29,6 @@ from api_for_frontend import (
     delete_nodes_list,
     add_links,
     delete_links,
-    add_fabric,
-    delete_fabric,
     disable_poll_nodes_list,
     healthz
 )
@@ -447,3 +445,10 @@ def test_disable_nodes_list() -> None:
     for node in nodes_list:
         db_node: Dict[str, Any] = get_node(node)
         assert not db_node["to_poll"]
+
+
+def test_healthz() -> None:
+    """Just test simple healthz
+    func"""
+
+    assert healthz() == {"response": "Ok"}
