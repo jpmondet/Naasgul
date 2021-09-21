@@ -384,7 +384,7 @@ async def test_add_fabric() -> None:
 
     yfabric: Dict[str, List[Dict[str, Any]]] = {}
     with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
-        yfabric = yaml.load(yml)
+        yfabric = yaml.safe_load(yml)
 
     for node in yfabric["nodes"]:
         assert get_node(node["name"])
@@ -432,7 +432,7 @@ async def test_delete_fabric() -> None:
 
     yfabric: Dict[str, List[Dict[str, Any]]] = {}
     with open("tests/define_fabric.yaml", encoding="UTF-8") as yml:
-        yfabric = yaml.load(yml)
+        yfabric = yaml.safe_load(yml)
 
     for node in yfabric["nodes"]:
         assert not get_node(node["name"])
@@ -443,6 +443,29 @@ async def test_delete_fabric() -> None:
             link["name_node2"],
             link["iface_id_node2"],
         )
+
+
+@pytest.mark.asyncio
+async def test_bad_credentials() -> None:
+    """Tests that bad credentials results in
+    an exception."""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    bfabric: bytes = b"0"
+    with open("tests/define_fabric.yaml", "rb") as rbfabric:
+        bfabric = rbfabric.read()
+
+    async with AsyncClient(app=app, base_url="http://test") as aclient:
+        response = await aclient.post(
+            "/fabric",
+            headers={"Content-type": "application/x-yaml"},
+            content=bfabric,
+            auth=("wronguser", "wrongpass"),
+        )
+    assert response.status_code == 401
+
 
 
 def test_disable_nodes_list() -> None:
