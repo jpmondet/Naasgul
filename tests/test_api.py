@@ -5,6 +5,7 @@ Warning: A mongodb must be up&running"""
 import sys
 import os
 from typing import Dict, List, Any
+from time import time
 import json
 import yaml
 import pytest
@@ -32,7 +33,7 @@ from api_for_frontend import (
     disable_poll_nodes_list,
     healthz,
 )
-from db_layer import prep_db_if_not_exist, get_node, get_link
+from db_layer import prep_db_if_not_exist, get_node, get_link, add_fake_iface_stats
 
 
 TEST_GRAPH_DATA: Dict[str, List[Dict[str, Any]]] = {}
@@ -170,6 +171,26 @@ def test_stats_of_1_device() -> None:
         }
     }
     assert stats_retrieved == test_datas_to_match
+
+
+def test_stats_of_1_device_with_timestamp() -> None:
+    """Tests retrieval & formatting of the stats of a
+    uniq devices when timestamps are somewhat ok"""
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+    add_fake_datas(12, 5, False, False)
+
+    query: List[str] = ["fake_device_stage1_3"]
+    iface_name: str = "1/1"
+    timestamp: float = time() + 1000
+
+    add_fake_iface_stats(query[0], iface_name, timestamp, 1000, 1000)
+    add_fake_iface_stats(query[0], iface_name, timestamp + 10, 2000, 2000)
+
+    stats_retrieved: Dict[str, Dict[str, Dict[str, Any]]] = stats(query)
+
+    assert stats_retrieved[query[0]][iface_name]["stats"][-1]["InSpeed"] == 800
+    assert stats_retrieved[query[0]][iface_name]["stats"][-1]["OutSpeed"] == 800
 
 
 def test_stats_bad_request_not_list() -> None:
