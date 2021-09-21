@@ -295,7 +295,8 @@ def add_link(  # pylint: disable=too-many-arguments
         )
 
 
-def add_fake_iface_utilization(device_name: str, iface_name: str) -> None:
+def add_fake_iface_utilization(device_name: str, iface_name: str, prev_utilization: int = 0, last_utilization: int = 0,
+timestamp: float = time(), prev_timestamp: float = 0) -> None:
     """Inserts (or updates) default (0) link utilization into db"""
 
     UTILIZATION_COLLECTION.update_one(
@@ -304,8 +305,10 @@ def add_fake_iface_utilization(device_name: str, iface_name: str) -> None:
             "$set": {
                 "device_name": f"{device_name}",
                 "iface_name": f"{iface_name}",
-                "prev_utilization": 0,
-                "last_utilization": 0,
+                "prev_utilization": prev_utilization,
+                "last_utilization": last_utilization,
+                "prev_timestamp": prev_timestamp,
+                "timestamp": timestamp,
             }
         },
         True,
