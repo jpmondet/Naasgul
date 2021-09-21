@@ -93,14 +93,14 @@ def get_link(
     name_node1: str, iface_id_node1: str, name_node2: str, iface_id_node2: str
 ) -> Dict[str, Any]:
     """Returns a single exact link from the db"""
-    return LINKS_COLLECTION.find_one(
+    return LINKS_COLLECTION.find_one(  # type: ignore
         {
             "device_name": name_node1,
             "iface_name": iface_id_node1,
             "neighbor_name": name_node2,
             "neighbor_iface": iface_id_node2,
         }
-    )  # type: ignore
+    )
 
 
 def get_links_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:

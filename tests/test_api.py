@@ -8,7 +8,7 @@ from typing import Dict, List, Any
 import json
 import yaml
 import pytest
-from httpx import AsyncClient  # type: ignore
+from httpx import AsyncClient
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas

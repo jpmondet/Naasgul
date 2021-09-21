@@ -47,7 +47,7 @@ pytest:
       alias: snmpsim
   script:
     - pip install -r requirements-dev.txt
-    - pytest --cov=backend -s tests/ --junitxml=report.xml
+    - pytest --cov=backend -s tests/ --junitxml=report.xml --cov-report=term-missing
   artifacts:
     when: always
     reports:
