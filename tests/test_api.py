@@ -407,7 +407,9 @@ async def test_delete_fabric() -> None:
     delete_all_collections_datas()
     prep_db_if_not_exist()
 
-    bfabric = open("tests/define_fabric.yaml", "rb")  # typing: ignore
+    bfabric: bytes = b"0"
+    with open("tests/define_fabric.yaml", "rb") as rbfabric:
+        bfabric = rbfabric.read()
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
         response = await aclient.post(
@@ -419,10 +421,11 @@ async def test_delete_fabric() -> None:
     assert response.status_code == 200
 
     async with AsyncClient(app=app, base_url="http://test") as aclient:
-        response = await aclient.post(
+        response = await aclient.request(
+            "DELETE",
             "/fabric",
             headers={"Content-type": "application/x-yaml"},
-            json=bfabric,
+            content=bfabric,
             auth=("user", "pass"),
         )
     assert response.status_code == 200
