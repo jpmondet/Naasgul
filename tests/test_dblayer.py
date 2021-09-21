@@ -19,6 +19,7 @@ from db_layer import (
     add_iface_stats,
     bulk_update_collection,
     get_stats_devices,
+    get_speed_iface,
     UTILIZATION_COLLECTION,
     add_node,
     add_link,
@@ -139,6 +140,32 @@ def test_add_iface_stats() -> None:
             return
 
     raise ValueError
+
+
+def test_get_speed_iface() -> None:
+    """Test add_iface_stats func by
+    checking the db after using it"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+
+    device: str = "fake_device_stage1_1"
+    iface: str = "1/1"
+    timestamp: str = "now"
+    speed: int = 1337
+
+    stats_list: List[Dict[str, Any]] = [
+        {
+            "device_name": device,
+            "iface_name": iface,
+            "timestamp": timestamp,
+            "speed": speed,
+        }
+    ]
+    add_iface_stats(stats_list)
+
+    assert get_speed_iface(device, iface) == speed
+
 
 
 def test_bulk_update_collection() -> None:
