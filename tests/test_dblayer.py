@@ -5,6 +5,7 @@ test_snmp (which already call most db_layer functions)"""
 import sys
 import os
 from typing import Dict, List, Any, Tuple
+from time import time
 import pytest
 from pymongo.errors import DuplicateKeyError as MDDPK  # type: ignore
 from add_fake_data_to_db import delete_all_collections_datas, add_fake_datas
@@ -16,7 +17,9 @@ from db_layer import (
     get_all_nodes,
     get_all_links,
     get_latest_utilization,
+    get_all_highest_utilizations,
     add_iface_stats,
+    add_fake_iface_utilization,
     bulk_update_collection,
     get_stats_devices,
     get_speed_iface,
@@ -108,6 +111,26 @@ def test_get_latest_utilization_not_existing() -> None:
     assert latest == 0
     assert timestamp == 0
 
+
+def test_get_all_highest_utilizations() -> None:
+    """Tests getting highest utilization when
+    timestamp is near 'now time'."""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+    add_fake_datas(12, 5, False, False)
+
+    device_name: str = "fake_device"
+    iface_name: str = "1/1"
+    prev_utilization: int = 1000
+    timestamp: float = time()
+    prev_timestamp: float = timestamp - 100
+    last_utilization: int = 2000
+
+
+    add_fake_iface_utilization(device_name, iface_name, prev_utilization, last_utilization, timestamp, prev_timestamp)
+
+    assert get_all_highest_utilizations()[device_name+iface_name] == int(1000/100)
 
 def test_add_iface_stats() -> None:
     """Test add_iface_stats func by
