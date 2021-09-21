@@ -77,6 +77,40 @@ def test_graph_links() -> None:
     assert sorted_links == sorted_test_links
 
 
+def test_sub_graph_nodes() -> None:
+    """Gets graph nodes for specific patterns from api
+    (and thus db) and compares
+    it with nodes in json file"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+    add_fake_datas(12, 5, False, False)
+
+    patterns = ["stage1_1", "stage1_2"]
+
+    sub_graph: Dict[str, List[Dict[str, Any]]] = get_graph(dpat=patterns)
+
+    for node in sub_graph["nodes"]:
+        assert any(device_pattern in node["device_name"] for device_pattern in patterns)
+
+
+def test_sub_graph_links() -> None:
+    """Gets graph links for specific patterns from api
+    (and thus db) and compares
+    it with links in json file"""
+
+    delete_all_collections_datas()
+    prep_db_if_not_exist()
+    add_fake_datas(12, 5, False, False)
+
+    patterns = ["stage1_1", "stage1_2"]
+
+    sub_graph: Dict[str, List[Dict[str, Any]]] = get_graph(dpat=patterns)
+
+    for link in sub_graph["links"]:
+        assert any((device_pattern in link["source"] and device_pattern in link["target"]) for device_pattern in patterns)
+
+
 def test_stats_of_link_between_2_devices() -> None:
     """Tests retrieval & formatting of the stats of a
     specific link between 2 devices"""
