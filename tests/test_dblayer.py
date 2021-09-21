@@ -167,7 +167,6 @@ def test_get_speed_iface() -> None:
     assert get_speed_iface(device, iface) == speed
 
 
-
 def test_bulk_update_collection() -> None:
     """Test bulk_update_collection func by
     checking the db after using it"""

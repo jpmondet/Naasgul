@@ -108,7 +108,10 @@ def test_sub_graph_links() -> None:
     sub_graph: Dict[str, List[Dict[str, Any]]] = get_graph(dpat=patterns)
 
     for link in sub_graph["links"]:
-        assert any((device_pattern in link["source"] and device_pattern in link["target"]) for device_pattern in patterns)
+        assert any(
+            (device_pattern in link["source"] and device_pattern in link["target"])
+            for device_pattern in patterns
+        )
 
 
 def test_stats_of_link_between_2_devices() -> None:
@@ -499,7 +502,6 @@ async def test_bad_credentials() -> None:
             auth=("wronguser", "wrongpass"),
         )
     assert response.status_code == 401
-
 
 
 def test_disable_nodes_list() -> None:
