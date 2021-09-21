@@ -295,8 +295,14 @@ def add_link(  # pylint: disable=too-many-arguments
         )
 
 
-def add_fake_iface_utilization(device_name: str, iface_name: str, prev_utilization: int = 0, last_utilization: int = 0,
-timestamp: float = time(), prev_timestamp: float = 0) -> None:
+def add_fake_iface_utilization(  # pylint: disable=too-many-arguments
+    device_name: str,
+    iface_name: str,
+    prev_utilization: int = 0,
+    last_utilization: int = 0,
+    timestamp: float = time(),
+    prev_timestamp: float = 0,
+) -> None:
     """Inserts (or updates) default (0) link utilization into db"""
 
     UTILIZATION_COLLECTION.update_one(
@@ -315,7 +321,13 @@ timestamp: float = time(), prev_timestamp: float = 0) -> None:
     )
 
 
-def add_fake_iface_stats(device_name: str, iface_name: str, timestamp: float = time(), in_bytes: int = 0, out_bytes: int = 0) -> None:
+def add_fake_iface_stats(
+    device_name: str,
+    iface_name: str,
+    timestamp: float = time(),
+    in_bytes: int = 0,
+    out_bytes: int = 0,
+) -> None:
     """Inserts fake stats for a specific interface into db"""
 
     STATS_COLLECTION.insert_one(

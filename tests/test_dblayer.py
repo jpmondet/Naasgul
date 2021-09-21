@@ -127,10 +127,12 @@ def test_get_all_highest_utilizations() -> None:
     prev_timestamp: float = timestamp - 100
     last_utilization: int = 2000
 
+    add_fake_iface_utilization(
+        device_name, iface_name, prev_utilization, last_utilization, timestamp, prev_timestamp
+    )
 
-    add_fake_iface_utilization(device_name, iface_name, prev_utilization, last_utilization, timestamp, prev_timestamp)
+    assert get_all_highest_utilizations()[device_name + iface_name] == int(1000 / 100)
 
-    assert get_all_highest_utilizations()[device_name+iface_name] == int(1000/100)
 
 def test_add_iface_stats() -> None:
     """Test add_iface_stats func by
