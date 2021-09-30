@@ -25,6 +25,7 @@ from api_for_frontend import (
     Neighbor,
     Link,
     add_static_node,
+    get_node_infos,
     delete_node_by_fqdn,
     add_nodes_list_to_poll,
     delete_nodes_list,
@@ -92,7 +93,7 @@ def test_sub_graph_nodes() -> None:
     sub_graph: Dict[str, List[Dict[str, Any]]] = get_graph(dpat=patterns)
 
     for node in sub_graph["nodes"]:
-        assert any(device_pattern in node["device_name"] for device_pattern in patterns)
+        assert any(device_pattern in node["id"] for device_pattern in patterns)
 
 
 def test_sub_graph_links() -> None:
@@ -309,6 +310,16 @@ def test_add_static_node() -> None:
     add_static_node(node, node_neighbors, creds)
 
     assert get_node(node.name)
+
+
+def test_get_node_by_fqdn() -> None:
+    """Tests to get all info about a specific node"""
+
+    node_name: str = "test_static"
+
+    creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
+
+    assert get_node_infos(node_name, creds) == get_node(node_name)
 
 
 def test_delete_node_by_fqdn() -> None:

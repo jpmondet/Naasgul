@@ -69,7 +69,6 @@ def test_get_all_links() -> None:
     links: List[Dict[str, Any]] = list(get_all_links())
 
     assert len(links) == 1
-    del links[0]["_id"]
     assert links[0] == {
         "device_name": node_name,
         "neighbor_name": neigh_name,
