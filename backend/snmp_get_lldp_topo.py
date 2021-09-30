@@ -72,7 +72,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         neigh_ip: str = ".".join(neigh_ip_oid.split(".")[-4:])
 
         neigh_descr: str = ""
-        neigh_descr, _ = next(
+        _, neigh_descr = next(
             search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_sys_descr']}*", yielded=True)
         )
 
@@ -100,7 +100,7 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         neigh_iface_descr: str = ""
         _, local_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_local_iface']}*", yielded=True))
         _, neigh_iface = next(search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface']}*", yielded=True))
-        _, neigh_descr = next(
+        _, neigh_iface_descr = next(
             search(lldp_nei, f"{NEEDED_MIBS['lldp_neigh_iface_descr']}*", yielded=True)
         )
         # Stripping "Et, Ethernet, E,... " which can be different per equipment
