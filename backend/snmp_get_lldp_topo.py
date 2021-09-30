@@ -77,7 +77,9 @@ def dump_results_to_db(device_name: str, lldp_infos: List[Dict[str, str]]) -> No
         )
 
         if NODES_PATTERNS:
-            if not any(device_pattern in neigh_name for device_pattern in NODES_PATTERNS.split()):
+            if not any(
+                device_pattern in neigh_name for device_pattern in NODES_PATTERNS.split(",")
+            ):
                 to_poll = False
         query_neigh: Dict[str, str] = {"device_name": neigh_name}
         nodes_list.append(
