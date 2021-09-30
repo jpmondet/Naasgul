@@ -5,7 +5,7 @@ that can be (and should be) abstracted """
 
 from os import getenv
 
-from typing import List, Dict, Any, Optional, Iterable, Tuple
+from typing import List, Dict, Any, Optional, Tuple
 from time import time
 from re import compile as rcompile, IGNORECASE as rIGNORECASE
 
@@ -62,7 +62,7 @@ def prep_db_if_not_exist() -> None:
 
 def get_entire_collection(mongodb_collection) -> List[Dict[str, Any]]:  # type: ignore
     """Returns the entire collection passed in parameter as a list"""
-    return list(mongodb_collection.find({}, {'_id': False}))
+    return list(mongodb_collection.find({}, {"_id": False}))
 
 
 def get_all_nodes() -> List[Dict[str, Any]]:
@@ -75,14 +75,14 @@ def get_nodes_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:
     return list(
         NODES_COLLECTION.find(
             {"$or": [{"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns]},
-            {'_id': False}
+            {"_id": False},
         )
     )
 
 
 def get_node(node_name: str) -> Dict[str, Any]:
     """Returns a single exact node from the db"""
-    return NODES_COLLECTION.find_one({"device_name": node_name}, {'_id': False})  # type: ignore
+    return NODES_COLLECTION.find_one({"device_name": node_name}, {"_id": False})  # type: ignore
 
 
 def get_all_links() -> List[Dict[str, Any]]:
@@ -172,25 +172,25 @@ def get_all_speeds() -> Dict[str, int]:
     return speeds
 
 
-def get_links_device(device: str) -> Iterable[Dict[str, Any]]:
+def get_links_device(device: str) -> Any:
     """Returns all links of one specific device (also looks
     at links on which this device is appearing as a neighbor)"""
 
     query: List[Dict[str, str]] = [{"device_name": device}, {"neighbor_name": device}]
-    return LINKS_COLLECTION.find({"$or": query}, {'_id': False})
+    return LINKS_COLLECTION.find({"$or": query}, {"_id": False})
 
 
 def get_utilizations_device(device: str) -> List[Dict[str, Any]]:
     """Returns all links utilizations of one specific device"""
 
-    return list(UTILIZATION_COLLECTION.find({"device_name": device}, {'_id': False}))
+    return list(UTILIZATION_COLLECTION.find({"device_name": device}, {"_id": False}))
 
 
 def get_stats_devices(devices: List[str]) -> List[Dict[str, Any]]:
     """Returns all stats of all devices passed in parameter"""
 
     query: List[Dict[str, str]] = [{"device_name": device} for device in devices]
-    return list(STATS_COLLECTION.find({"$or": query}, {'_id': False}))
+    return list(STATS_COLLECTION.find({"$or": query}, {"_id": False}))
 
 
 def get_speed_iface(device_name: str, iface_name: str) -> int:
