@@ -295,7 +295,7 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
     background_time_update()
     # logger.error(f"Caching timeout : {TIMEOUT}")
 
-    start_nodes_timer = time()
+    # start_nodes_timer = time()
     nodes: List[Dict[str, Any]] = []
     if isinstance(dpat, list):
         nodes = get_from_db_or_cache(f"nodes{dpat}")
@@ -322,9 +322,9 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
             del node["device_name"]
             node["image"] = "router.png"
 
-    logger.error(f'Nodes timer End: {time() - start_nodes_timer}')
+    # logger.error(f"Nodes timer End: {time() - start_nodes_timer}")
 
-    start_format_timer = time()
+    # start_format_timer = time()
 
     formatted_links: Dict[str, Any] = {}
     if isinstance(dpat, list):
@@ -350,7 +350,6 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
 
         # logger.error("Utilizations: " + str(utilizations))
         # logger.error("Speeds: " + str(speeds))
-
 
         logger.error(f"Nb links to format:{len(sorted_links)}")
         for link in sorted_links:
@@ -444,7 +443,7 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
                 #    formatted_links[id_link_2] = f_link_2
 
         # logger.error(formatted_links)
-        logger.error(f'Format links End: {time() - start_format_timer}')
+        # logger.error(f"Format links End: {time() - start_format_timer}")
 
         global CACHE, CACHED_TIMEOUT
         if dpat:
@@ -564,9 +563,10 @@ def stats(  # pylint: disable=too-many-locals
 def neighborships(
     device: str = Query(..., min_length=1, max_length=100)  # , regex="^[a-z]{2,3}[0-9]{1}.iou$")
 ) -> List[Dict[str, str]]:
-    """
+    """Returns all neighbors of a specific node.
+    Each neighbor is defined by :
     {
-                    "deviceName":[
+                "deviceName":[
                     "local_intf": "Ethernet0/0",
                     "neighbor": "deviceName2",
                     "neighbor_intf": "Ethernet0/0",
@@ -691,6 +691,18 @@ def get_node_infos(
     logger.error(node_infos)
 
     return node_infos
+
+
+@app.get("/nodes")
+def get_nodes(
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> List[Dict[str, Any]]:
+    """Gets all nodes infos (useful
+    for debugging)"""
+
+    return get_all_nodes()
 
 
 @app.post("/nodes")
