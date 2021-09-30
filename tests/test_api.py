@@ -26,6 +26,7 @@ from api_for_frontend import (
     Link,
     add_static_node,
     get_node_infos,
+    get_nodes,
     delete_node_by_fqdn,
     add_nodes_list_to_poll,
     delete_nodes_list,
@@ -34,7 +35,7 @@ from api_for_frontend import (
     disable_poll_nodes_list,
     healthz,
 )
-from db_layer import prep_db_if_not_exist, get_node, get_link, add_fake_iface_stats
+from db_layer import prep_db_if_not_exist, get_node, get_link, add_fake_iface_stats, get_all_nodes
 
 
 TEST_GRAPH_DATA: Dict[str, List[Dict[str, Any]]] = {}
@@ -332,6 +333,12 @@ def test_get_node_by_fqdn() -> None:
         "node_stats": [],
         "node_links_utilizations": [],
     }
+
+
+def test_get_nodes() -> None:
+    """Tests the func that retrieves all nodes"""
+
+    assert get_nodes() == get_all_nodes()
 
 
 def test_delete_node_by_fqdn() -> None:
