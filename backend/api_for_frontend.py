@@ -10,6 +10,7 @@
             stats,
             neighborships
         )
+    The other routes are there for tests/debug & on-automatic tasks.
 """
 # pylint: disable=global-statement,global-variable-not-assigned,logging-fstring-interpolation
 
@@ -259,10 +260,10 @@ def try_to_deduce_grouping(groups_known: Dict[str, int], node_name: str) -> Tupl
 @app.get("/graph")
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[str, Any]]]:
-    """
+    """Returns the entire graph composed of nodes & links such as:
             "links": [
                 {
-                    "highest_utilization": 0,
+                    "highest_utilization": 0.0,
                     "source": "deviceName",
                     "source_interfaces": [
                         "Ethernet0/0"
@@ -272,11 +273,13 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
                     "target_interfaces": [
                         "Ethernet0/0"
                     ],
+                    "linknum": 1,
                 },
                 {}],
             "nodes": [
                     {
-                        group: 1,
+                        groupx: 1,
+                        groupy: 1,
                         id: "deviceName",
                         image: "default.png",
                     },
@@ -286,34 +289,45 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
 
     Graph shouldn't be updated very much
     However, "highest_utilization" must be updated each time the API is called
-     with fresh "stats" values
+     with fresh "stats" values (so the frontend can colorize links accordingly).
     """
 
     background_time_update()
     # logger.error(f"Caching timeout : {TIMEOUT}")
 
+    start_nodes_timer = time()
     nodes: List[Dict[str, Any]] = []
     if isinstance(dpat, list):
-        nodes = list(get_from_db_or_cache(f"nodes{str(dpat)}", get_nodes_by_patterns, dpat))
+        nodes = get_from_db_or_cache(f"nodes{dpat}")
     else:
-        nodes = get_from_db_or_cache("nodes", get_all_nodes)
+        nodes = get_from_db_or_cache("nodes")
+    if not nodes:
+        if isinstance(dpat, list):
+            nodes = list(get_from_db_or_cache(f"nodes{str(dpat)}", get_nodes_by_patterns, dpat))
+        else:
+            nodes = get_from_db_or_cache("nodes", get_all_nodes)
 
-    groups: Dict[str, int] = {}
+        groups: Dict[str, int] = {}
 
-    for node in nodes:
-        if (
-            not node.get("groupx")
-            or not node.get("groupy")
-            or (node["groupx"] == 11 and node["groupy"] == 11)
-        ):
+        for node in nodes:
+            if (
+                not node.get("groupx")
+                or not node.get("groupy")
+                or (node["groupx"] == 11 and node["groupy"] == 11)
+            ):
 
-            node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
+                node["groupx"], node["groupy"] = try_to_deduce_grouping(groups, node["device_name"])
 
-        node["id"] = node["device_name"]
-        node["image"] = "router.png"
+            node["id"] = node["device_name"]
+            del node["device_name"]
+            node["image"] = "router.png"
+
+    logger.error(f'Nodes timer End: {time() - start_nodes_timer}')
+
+    start_format_timer = time()
 
     formatted_links: Dict[str, Any] = {}
-    if dpat:
+    if isinstance(dpat, list):
         formatted_links = get_from_db_or_cache(f"formatted_links{dpat}")
     else:
         formatted_links = get_from_db_or_cache("formatted_links")
@@ -337,7 +351,6 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
         # logger.error("Utilizations: " + str(utilizations))
         # logger.error("Speeds: " + str(speeds))
 
-        # start_format_timer = time()
 
         logger.error(f"Nb links to format:{len(sorted_links)}")
         for link in sorted_links:
@@ -431,14 +444,17 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
                 #    formatted_links[id_link_2] = f_link_2
 
         # logger.error(formatted_links)
-        # logger.error(f'Format links End: {time() - start_format_timer}')
+        logger.error(f'Format links End: {time() - start_format_timer}')
 
         global CACHE, CACHED_TIMEOUT
         if dpat:
             CACHE[f"formatted_links{dpat}"] = formatted_links
+            CACHE[f"nodes{dpat}"] = nodes
         else:
             CACHE["formatted_links"] = formatted_links
+            CACHE["nodes"] = nodes
         CACHED_TIMEOUT["formatted_links"] = False
+        CACHED_TIMEOUT["nodes"] = False
 
     return {"nodes": nodes, "links": list(formatted_links.values())}
 
@@ -447,7 +463,8 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
 def stats(  # pylint: disable=too-many-locals
     devices: List[str] = Query(None),
 ) -> Dict[str, Dict[str, Dict[str, Any]]]:
-    """
+    """Returns all the stats of one or more
+    devices
     {
         "ifDescr": "Ethernet0/0",
         "index": 1,
