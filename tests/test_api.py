@@ -319,7 +319,19 @@ def test_get_node_by_fqdn() -> None:
 
     creds: HTTPBasicCredentials = HTTPBasicCredentials(username="user", password="pass")
 
-    assert get_node_infos(node_name, creds) == get_node(node_name)
+    assert get_node_infos(node_name, creds) == {
+        "node_details": {
+            "device_name": "test_static",
+            "device_descr": "",
+            "groupx": 11,
+            "groupy": 11,
+            "image": "router.png",
+            "to_poll": False,
+        },
+        "node_neighs": [],
+        "node_stats": [],
+        "node_links_utilizations": [],
+    }
 
 
 def test_delete_node_by_fqdn() -> None:
