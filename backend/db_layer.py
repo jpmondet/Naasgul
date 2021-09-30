@@ -62,7 +62,7 @@ def prep_db_if_not_exist() -> None:
 
 def get_entire_collection(mongodb_collection) -> List[Dict[str, Any]]:  # type: ignore
     """Returns the entire collection passed in parameter as a list"""
-    return list(mongodb_collection.find({}))
+    return list(mongodb_collection.find({}, {'_id': False}))
 
 
 def get_all_nodes() -> List[Dict[str, Any]]:
@@ -74,7 +74,8 @@ def get_nodes_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:
     """Returns all nodes matched as an iterator"""
     return list(
         NODES_COLLECTION.find(
-            {"$or": [{"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns]}
+            {"$or": [{"device_name": rcompile(pattern, rIGNORECASE)} for pattern in patterns]},
+            {'_id': False}
         )
     )
 

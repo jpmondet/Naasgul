@@ -312,11 +312,6 @@ def get_graph(dpat: Optional[List[str]] = Query(None)) -> Dict[str, List[Dict[st
         node["id"] = node["device_name"]
         node["image"] = "router.png"
 
-        try:
-            del node["_id"]  # removing mongodb objectId
-        except KeyError:
-            pass
-
     formatted_links: Dict[str, Any] = {}
     if dpat:
         formatted_links = get_from_db_or_cache(f"formatted_links{dpat}")
