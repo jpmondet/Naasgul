@@ -35,6 +35,7 @@ from db_layer import (
     get_all_links,
     get_links_by_patterns,
     get_links_device,
+    get_utilizations_device,
     get_all_highest_utilizations,
     get_all_speeds,
     get_node,
@@ -487,7 +488,7 @@ def stats(  # pylint: disable=too-many-locals
             stats_by_device = {}
 
             sorted_stats: List[Dict[str, Any]] = sorted(
-                list(get_stats_devices(devices)),
+                get_stats_devices(devices),
                 key=lambda d: (d["device_name"], d["iface_name"], d["timestamp"]),
             )
             prev_inbits: int = 0
@@ -656,6 +657,28 @@ def add_static_node(
     add_static_node_to_db(node, node_neighbors)
 
     return {"response": "Ok"}
+
+
+@app.get("/node/{node}")
+def get_node_infos(
+    node: str,
+    credentials: HTTPBasicCredentials = Depends(
+        check_credentials
+    ),  # pylint: disable=unused-argument
+) -> Dict[str, Any]:
+    """Gets all infos about a specific node (useful
+    for debugging)"""
+
+    node_infos: Dict[str, Any] = {
+        "node_details": get_node(node),
+        "node_neighs": list(get_links_device(node)),
+        "node_stats": get_stats_devices([node]),
+        "node_links_utilizations": get_utilizations_device(node),
+    }
+
+    logger.error(node_infos)
+
+    return node_infos
 
 
 @app.post("/nodes")

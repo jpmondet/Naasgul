@@ -81,7 +81,7 @@ def get_nodes_by_patterns(patterns: List[str]) -> List[Dict[str, Any]]:
 
 def get_node(node_name: str) -> Dict[str, Any]:
     """Returns a single exact node from the db"""
-    return NODES_COLLECTION.find_one({"device_name": node_name})  # type: ignore
+    return NODES_COLLECTION.find_one({"device_name": node_name}, {'_id': False})  # type: ignore
 
 
 def get_all_links() -> List[Dict[str, Any]]:
@@ -171,19 +171,25 @@ def get_all_speeds() -> Dict[str, int]:
     return speeds
 
 
-def get_links_device(device: str) -> List[Dict[str, Any]]:
+def get_links_device(device: str) -> Iterable[Dict[str, Any]]:
     """Returns all links of one specific device (also looks
     at links on which this device is appearing as a neighbor)"""
 
     query: List[Dict[str, str]] = [{"device_name": device}, {"neighbor_name": device}]
-    return LINKS_COLLECTION.find({"$or": query})  # type: ignore
+    return LINKS_COLLECTION.find({"$or": query}, {'_id': False})
 
 
-def get_stats_devices(devices: List[str]) -> Iterable[Dict[str, Any]]:
+def get_utilizations_device(device: str) -> List[Dict[str, Any]]:
+    """Returns all links utilizations of one specific device"""
+
+    return list(UTILIZATION_COLLECTION.find({"device_name": device}, {'_id': False}))
+
+
+def get_stats_devices(devices: List[str]) -> List[Dict[str, Any]]:
     """Returns all stats of all devices passed in parameter"""
 
     query: List[Dict[str, str]] = [{"device_name": device} for device in devices]
-    return STATS_COLLECTION.find({"$or": query})  # type: ignore
+    return list(STATS_COLLECTION.find({"$or": query}, {'_id': False}))
 
 
 def get_speed_iface(device_name: str, iface_name: str) -> int:
