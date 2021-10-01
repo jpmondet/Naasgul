@@ -18,6 +18,19 @@ if ('serviceWorker' in navigator && 'caches' in window) {
   });
 }
 
+document.getElementById('link').onclick = function()
+{
+    let searchValues = document.getElementById('link_id').value.split(",");
+    //var searchParams = new URLSearchParams(window.location.search);
+    let searchParams = new URLSearchParams();
+    for (let searchVal of searchValues) {
+      if (searchVal) {
+        searchParams.append('dpat', searchVal);
+      }
+    }
+    window.location.search = searchParams.toString();
+};
+
 var apiUrl = "http://127.0.0.1/api";
 var graphRegex = window.location.search;
 
