@@ -2,6 +2,10 @@
   width: 100%;
 }
 
+.searchbox {
+  width: 50%;
+}
+
 .slider {
   -webkit-appearance: none;
   width: 100%;
